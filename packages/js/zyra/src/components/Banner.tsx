@@ -116,6 +116,58 @@ const Banner: React.FC< BannerProps > = ( { isPro, products, proUrl } ) => {
 
     return (
         <>
+            {isPro && (
+                    <div className="top-header">
+                    <Dialog
+                        className="admin-module-popup"
+                        open={ modal }
+                        onClose={ handleClose }
+                        aria-labelledby="form-dialog-title"
+                    >
+                        <span
+                            className="admin-font adminfont-cross"
+                            role="button"
+                            tabIndex={ 0 }
+                            onClick={ handleClose }
+                        ></span>
+                        <ProPopup />
+                    </Dialog>
+
+                    <i
+                        className="adminfont-close"
+                        role="button"
+                        tabIndex={ 0 }
+                        onClick={ handleCloseBanner }
+                    ></i>
+                    <ul className="carousel-list ">
+                        { products?.map( ( product, i ) => {
+                            return (
+                                <li
+                                    key={ i }
+                                    className={ `carousel-item ${
+                                        i === 0 ? 'active' : ''
+                                    }` }
+                                >
+                                    <span className="title">
+                                        { product.title }:{ ' ' }
+                                    </span>
+                                    <span className="description">
+                                        { product.description }{ ' ' }
+                                    </span>
+                                    <a
+                                        href={ proUrl }
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Upgrade Now
+                                    </a>
+                                </li>
+                            );
+                        } ) }
+                    </ul>
+                </div>
+            )}
+            
             { ! isPro && banner && (
                 <div className="top-header">
                     <Dialog

@@ -15,7 +15,7 @@ export const TestSyncMap: Story = {
     args: {
         description: 'Map fields between systems to keep data in sync.',
         proSetting: true,
-        proSettingChanged: () => true,
+        proSettingChanged: () => false,
         value: [
             ['email', 'user_email'],
             ['name', 'full_name'],

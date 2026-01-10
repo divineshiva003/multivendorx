@@ -77,7 +77,7 @@ export const EmptyAddressField: Story = {
             id: 103,
             type: 'address',
             label: 'Empty Address',
-            fields: [],
+            fields: initialSubFields,
         });
 
         const [openedInput, setOpenedInput] = useState<any>(null);

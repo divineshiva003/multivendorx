@@ -16,6 +16,7 @@ export const TestFormViewer: Story = {
         formFields: {
             formfieldlist: [
                 {
+                    id:'username',
                     type: 'text',
                     name: 'username',
                     label: 'Username',
@@ -24,14 +25,15 @@ export const TestFormViewer: Story = {
                     charlimit: 50,
                 },
                 {
+                    id:'profile_picture',
                     type: 'attachment',
-                    name: 'username',
-                    label: 'Username',
-                    placeholder: 'Enter your username',
-                    required: true,
-                    charlimit: 50,
+                    name: 'profile_picture',
+                    label: 'Profile Picture',
+                    placeholder: 'Upload your profile picture',
+                    required: false,
                 },
                 {
+                    id:'bio',
                     type: 'textarea',
                     name: 'bio',
                     label: 'Bio',
@@ -39,6 +41,7 @@ export const TestFormViewer: Story = {
                     col: 50,
                 },
                 {
+                    id:'country',
                     type: 'select',
                     name: 'country',
                     label: 'Country',
@@ -53,13 +56,13 @@ export const TestFormViewer: Story = {
                     ],
                 },
             ],
-            butttonsetting: {
+            buttonsetting: {
                 text: 'Submit',
                 style: 'primary',
             },
         },
-        onSubmit: (data: FormData) => {
-            console.log('Form submitted:', Object.fromEntries(data.entries()));
+        onSubmit: (data) => {
+            console.log('Form submitted:', data);
         },
     },
     render: (args) => {

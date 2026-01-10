@@ -46,7 +46,7 @@ export const WithHeader: Story = {
                 <CommonPopup
                     open={open}
                     onClose={() => setOpen(false)}
-                    header={<h3 style={{ margin: 0 }}>Popup Header</h3>}
+                    header={{ title: "Popup Header" }}
                 >
                     <p>This popup has a custom header.</p>
                     <p>You can include titles, icons, or other elements.</p>
@@ -69,7 +69,7 @@ export const WithFooter: Story = {
                 <CommonPopup
                     open={open}
                     onClose={() => setOpen(false)}
-                    header={<h3>Popup Header</h3>}
+                    header={{ title: "Popup Header" }}
                     footer={
                         <>
                             <Button
@@ -109,7 +109,7 @@ export const CustomSize: Story = {
                 <CommonPopup
                     open={open}
                     onClose={() => setOpen(false)}
-                    header={<h3>Popup Header</h3>}
+                    header={{ title: "Popup Header" }}
                     width={600}
                     height={300}
                 >

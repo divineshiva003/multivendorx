@@ -148,7 +148,14 @@ body:has(.admin-main-wrapper) {
   color: $text-color;
 
   &.btn-preview {
-    padding: 0;
+    // Allow inline styles to override
+    padding: 0.5rem 1.5rem;
+    border: 1px solid transparent;
+    
+    // Don't set background or color here - let inline styles work
+    &:not([style*="background"]) {
+      background: transparent;
+    }
   }
 }
 

@@ -68,6 +68,7 @@ export const BannerWithoutProducts: Story = {
             textCode="#333333"
             btnCode="#ffffff"
             btnBgCode="#ff0000"
+            proUrl="https://example.com/pro"
         />
     ),
 };

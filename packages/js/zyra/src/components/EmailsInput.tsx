@@ -114,13 +114,27 @@ const EmailsInput = forwardRef< HTMLInputElement, EmailsInputProps >(
             return (
                 <input
                     type="email"
-                    value={ emails[ 0 ] || '' }
+                    value={ inputValue }
                     placeholder={ placeholder }
                     onChange={ ( e ) => {
-                        const v = e.target.value.trim();
-                        const updated = isValidEmail( v ) ? [ v ] : [];
-                        setEmails( updated );
-                        onChange?.( updated, null );
+                        const v = e.target.value;
+                        setInputValue( v );
+
+                        if ( isValidEmail( v.trim() ) ) {
+                            const updated = [ v.trim() ];
+                            setEmails( updated );
+                            onChange?.( updated, null );
+                        } else {
+                            setEmails( [] );
+                            onChange?.( [], null );
+                        }
+                    } }
+                    onBlur={ () => {
+                        const v = inputValue.trim();
+                        if ( isValidEmail( v ) ) {
+                            setEmails( [ v ] );
+                    onChange?.( [ v ], null );
+                    }
                     } }
                 />
             );
