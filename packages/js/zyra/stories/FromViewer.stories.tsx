@@ -1,71 +1,163 @@
+import React from 'react';
 import FormViewer from '../src/components/FormViewer';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 const meta: Meta<typeof FormViewer> = {
     title: 'Zyra/Components/FormViewer',
     component: FormViewer,
-    tags: ['autodocs'],
+    parameters: {
+        controls: { expanded: false },
+    },
 };
 
 export default meta;
 
 type Story = StoryObj<typeof FormViewer>;
 
-export const TestFormViewer: Story = {
+const countryList = [
+    { label: 'United States', value: 'US' },
+    { label: 'India', value: 'IN' },
+];
+
+const stateList = {
+    US: {
+        CA: 'California',
+        NY: 'New York',
+    },
+    IN: {
+        WB: 'West Bengal',
+        MH: 'Maharashtra',
+    },
+};
+
+export const AllFields: Story = {
     args: {
         formFields: {
             formfieldlist: [
                 {
-                    id:'username',
+                    id: 'username',
                     type: 'text',
                     name: 'username',
                     label: 'Username',
-                    placeholder: 'Enter your username',
-                    required: true,
-                    charlimit: 50,
                 },
                 {
-                    id:'profile_picture',
-                    type: 'attachment',
-                    name: 'profile_picture',
-                    label: 'Profile Picture',
-                    placeholder: 'Upload your profile picture',
-                    required: false,
+                    id: 'email',
+                    type: 'email',
+                    name: 'email',
+                    label: 'Email',
                 },
                 {
-                    id:'bio',
+                    id: 'bio',
                     type: 'textarea',
                     name: 'bio',
                     label: 'Bio',
                     row: 4,
-                    col: 50,
                 },
                 {
-                    id:'country',
-                    type: 'select',
-                    name: 'country',
-                    label: 'Country',
+                    id: 'designation',
+                    type: 'multiselect',
+                    name: 'designation',
+                    label: 'Designation',
                     options: [
-                        {
-                            value: 'us',
-                            label: 'United States',
-                            isDefault: true,
-                        },
-                        { value: 'ca', label: 'Canada' },
-                        { value: 'uk', label: 'United Kingdom' },
+                        { label: 'Admin', value: 'admin' },
+                        { label: 'User', value: 'user' },
+                    ],
+                },
+                {
+                    id: 'profile',
+                    type: 'attachment',
+                    name: 'profile',
+                    label: 'Profile Picture(select a file)',
+                },
+            ],
+        },
+        onSubmit: () => {
+            console.log('Form submitted');
+        },
+    },
+};
+
+export const RequiredFields: Story = {
+    args: {
+        formFields: {
+            formfieldlist: [
+                {
+                    id: 'name',
+                    type: 'text',
+                    name: 'name',
+                    label: 'Name',
+                    required: true,
+                },
+                {
+                    id: 'email',
+                    type: 'email',
+                    name: 'email',
+                    label: 'Email',
+                    required: true,
+                },
+            ],
+        },
+        onSubmit: () => {},
+    },
+};
+
+export const AddressDynamicCountryState: Story = {
+    args: {
+        countryList,
+        stateList,
+        formFields: {
+            formfieldlist: [
+                {
+                    id: 'address',
+                    type: 'address',
+                    label: 'Address',
+                    fields: [
+                        { id: 'country', key: 'country', label: 'Country' },
+                        { id: 'state', key: 'state', label: 'State' },
                     ],
                 },
             ],
-            buttonsetting: {
-                text: 'Submit',
-                style: 'primary',
-            },
         },
-        onSubmit: (data) => {
-            console.log('Form submitted:', data);
-        },
+        onSubmit: () => {},
     },
-    render: (args) => {
-        return <FormViewer {...args} />;
+};
+
+export const AttachmentUploaded: Story = {
+    args: {
+        formFields: {
+            formfieldlist: [
+                {
+                    id: 'profile',
+                    type: 'attachment',
+                    name: 'profile',
+                    label: 'Profile Picture(select a file)',
+                },
+            ],
+        },
+        onSubmit: () => {},
+    },
+};
+
+export const LongContent: Story = {
+    args: {
+        formFields: {
+            formfieldlist: [
+                {
+                    id: 'longlabel',
+                    type: 'text',
+                    name: 'longlabel',
+                    label:
+                        'This is an extremely long label used to test overflow behavior in constrained layouts',
+                },
+                {
+                    id: 'longtextarea',
+                    type: 'textarea',
+                    name: 'longtextarea',
+                    label: 'Long textarea',
+                    row: 6,
+                },
+            ],
+        },
+        onSubmit: () => {},
     },
 };

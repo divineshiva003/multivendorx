@@ -73,88 +73,69 @@ const GoogleMap = ({
 
     // Initialize map when Google Maps is loaded
     useEffect(() => {
-        if (
-            !googleLoaded ||
-            !autocompleteInputRef.current ||
-            !mapContainerRef.current
-        ) {
-            return;
-        }
+    if (!googleLoaded) return;
 
-        if (!window.google || !window.google.maps) {
-            return;
-        }
+    const container = mapContainerRef.current;
+    const input = autocompleteInputRef.current;
 
-        const initialLat = parseFloat(locationLat) || 40.7128;
-        const initialLng = parseFloat(locationLng) || -74.006;
+    if (!container || !input) return;
 
-        try {
-            const mapInstance = new window.google.maps.Map(
-                mapContainerRef.current,
-                {
-                    center: { lat: initialLat, lng: initialLng },
-                    zoom: locationLat ? 15 : 10,
-                    streetViewControl: false,
-                    mapTypeControl: true,
-                    fullscreenControl: true,
-                    zoomControl: true,
-                }
-            );
+    // 🔒 Prevent double initialization (Storybook + StrictMode)
+    if (container.dataset.mapInitialized === 'true') return;
 
-            const markerInstance = new window.google.maps.Marker({
-                map: mapInstance,
-                draggable: true,
-                position: { lat: initialLat, lng: initialLng },
-                title: 'Store Location',
+    container.dataset.mapInitialized = 'true';
+
+    const initialLat = parseFloat(locationLat) || 40.7128;
+    const initialLng = parseFloat(locationLng) || -74.006;
+
+    // ✅ Wait for layout paint (CRITICAL)
+    requestAnimationFrame(() => {
+        if (!container) return;
+
+        const mapInstance = new window.google.maps.Map(container, {
+            center: { lat: initialLat, lng: initialLng },
+            zoom: locationLat ? 15 : 10,
+            streetViewControl: false,
+            mapTypeControl: true,
+            fullscreenControl: true,
+            zoomControl: true,
+        });
+
+        const markerInstance = new window.google.maps.Marker({
+            map: mapInstance,
+            draggable: true,
+            position: { lat: initialLat, lng: initialLng },
+        });
+
+        markerInstance.addListener('dragend', () => {
+            const pos = markerInstance.getPosition();
+            if (pos) reverseGeocode(pos.lat(), pos.lng());
+        });
+
+        mapInstance.addListener('click', (event) => {
+            if (event.latLng) {
+                reverseGeocode(event.latLng.lat(), event.latLng.lng());
+            }
+        });
+
+        const autocomplete =
+            new window.google.maps.places.Autocomplete(input, {
+                fields: [
+                    'address_components',
+                    'formatted_address',
+                    'geometry',
+                ],
             });
 
-            markerInstance.addListener('dragend', () => {
-                const position = markerInstance.getPosition();
-                if (position) {
-                    reverseGeocode(position.lat(), position.lng());
-                }
-            });
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (place.geometry) handlePlaceSelect(place);
+        });
 
-            mapInstance.addListener(
-                'click',
-                (event: google.maps.MapMouseEvent) => {
-                    if (event.latLng) {
-                        reverseGeocode(
-                            event.latLng.lat(),
-                            event.latLng.lng()
-                        );
-                    }
-                }
-            );
-
-            const autocomplete = new window.google.maps.places.Autocomplete(
-                autocompleteInputRef.current,
-                {
-                    types: ['establishment', 'geocode'],
-                    fields: [
-                        'address_components',
-                        'formatted_address',
-                        'geometry',
-                        'name',
-                    ],
-                }
-            );
-
-            autocomplete.addListener('place_changed', () => {
-                const place =
-                    autocomplete.getPlace() as google.maps.places.PlaceResult;
-
-                if (place.geometry) {
-                    handlePlaceSelect(place);
-                }
-            });
-
-            setMap(mapInstance);
-            setMarker(markerInstance);
-        } catch (err) {
-            console.error(err);
-        }
-    }, [googleLoaded, locationLat, locationLng]);
+        setMap(mapInstance);
+        setMarker(markerInstance);
+    });
+},[googleLoaded, locationLat, locationLng]);
 
     const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
         if (!place.geometry) {

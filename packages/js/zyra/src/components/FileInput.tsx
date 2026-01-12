@@ -114,9 +114,13 @@ const FileInput: React.FC< FileInputProps > = ( props ) => {
 
     // Replace file — reset input and open file selector
     const handleReplaceClick = () => {
-        setIsReplacing( true );
-        props.onReplace?.( activeIndex, localImages );
-    };
+    setIsReplacing(true);
+
+    if (inputRef.current) {
+        inputRef.current.value = '';
+        inputRef.current.click(); 
+    }
+};
 
     const handleRemoveSingleImage = ( index: number ) => {
         setLocalImages( ( prev ) => {

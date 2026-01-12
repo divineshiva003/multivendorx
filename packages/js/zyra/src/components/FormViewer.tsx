@@ -62,7 +62,7 @@ interface ButtonSetting {
 
 interface FormFields {
     formfieldlist: Field[];
-    butttonsetting?: ButtonSetting;
+    buttonsetting?: ButtonSetting;
 }
 
 interface FormViewerProps {
@@ -227,7 +227,7 @@ const FormViewer: React.FC< FormViewerProps > = ( {
         {}
     );
     const formList = formFields.formfieldlist || [];
-    const buttonSetting = formFields.butttonsetting || {};
+    const buttonSetting = formFields.buttonsetting || {};
     const [ captchaToken, setCaptchaToken ] = useState< string | null >( null );
     const [ captchaError, setCaptchaError ] = useState< boolean >( false );
     const [ errors, setErrors ] = useState< Record< string, string > >( {} );

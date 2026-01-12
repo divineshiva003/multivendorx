@@ -10,8 +10,8 @@ import HoverInputRender from './HoverInputRender';
 
 // Types
 interface SimpleInputProps {
-    formField: { label: string; placeholder?: string };
-    onChange?: ( field: string, value: string ) => void;
+    formField: { label: string; placeholder?: string; value?: string; };
+    onChange?: ( field: 'label' | 'value', value: string ) => void;
 }
 
 const SimpleInput: React.FC< SimpleInputProps > = ( {
@@ -31,7 +31,9 @@ const SimpleInput: React.FC< SimpleInputProps > = ( {
                             className="basic-input"
                             type="text"
                             placeholder={ placeholder }
-                            readOnly
+                            onChange={(event) =>
+                                onChange?.('value', event.target.value)
+                            }
                         />
                     </div>
                 </div>
@@ -53,7 +55,6 @@ const SimpleInput: React.FC< SimpleInputProps > = ( {
                     <input
                         className="basic-input"
                         type="text"
-                        readOnly
                         placeholder={ placeholder }
                     />
                 </>

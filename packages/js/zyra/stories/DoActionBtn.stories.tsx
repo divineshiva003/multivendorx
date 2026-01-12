@@ -36,7 +36,8 @@ export const TestDoActionBtn: Story = {
         ],
         appLocalizer: {
             nonce: 'abc123',
-            ajax_url: 'https://example.com/wp-admin/admin-ajax.php',
+            apiUrl: 'https://example.com/wp-admin/admin-ajax.php',
+            restUrl: 'https://example.com/wp-json/',
         },
     },
     render: (args) => {

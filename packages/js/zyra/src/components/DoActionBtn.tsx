@@ -9,7 +9,7 @@ import '../styles/web/DoActionBtn.scss';
 interface Task {
     action: string;
     message: string;
-    cacheKey?: string; // Dynamic cache key
+    cache?: string; // Dynamic cache key
     successMessage?: string; // Custom success message
     failureMessage?: string; // Custom failure message
 }
@@ -147,9 +147,9 @@ const DoActionBtn: React.FC<DoActionBtnProps> = ({
         let status: TaskStatus = 'success';
         let customMessage = '';
 
-        // Store response data if cacheKey is specified
-        if (currentTask.cacheKey && response.data !== undefined) {
-            additionalData.current[currentTask.cacheKey] = response.data;
+        // Store response data if cache is specified
+        if (currentTask.cache && response.data !== undefined) {
+            additionalData.current[currentTask.cache] = response.data;
         }
 
         // Determine task success based on response

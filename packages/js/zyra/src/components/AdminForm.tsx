@@ -56,6 +56,7 @@ interface WPMediaSelection {
     first(): {
         toJSON(): WPMediaAttachment;
     };
+    toJSON(): WPMediaAttachment[];
 }
 
 interface WPMediaState {
@@ -238,6 +239,7 @@ interface InputField {
     addNewBtnText?: string;
     addNewBtn?: boolean;
     blocktext?: string;
+    blockTextClass?: string;
     defaultValues?: MultiStringItem[];
     title?: string;
     rows?: {
@@ -363,6 +365,13 @@ type SettingValue =
     | string[]
     | number[]
     | Record< string, unknown >
+    | ButtonSettings
+    | FormField[]
+    | MultiStringItem[]
+    | ColorSettingValue
+    | Option[]
+    | [string, string][]
+    | { startDate: Date; endDate: Date }
     | null
     | undefined;
 
@@ -560,25 +569,29 @@ const AdminForm: React.FC< AdminFormProps > = ( {
     };
 
     const handleChange = (
-        event:
-            | React.ChangeEvent<
-                  HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-              >
-            | string
-            | string[]
-            | number
-            | React.ChangeEvent
-            | { index: number },
-        key: string,
-        type: 'single' | 'multiple' = 'single',
-        fromType:
-            | 'simple'
-            | 'calender'
-            | 'select'
-            | 'multi-select'
-            | 'wpeditor' = 'simple',
-        arrayValue: string[] | number[] = []
-    ) => {
+    event:
+        | React.ChangeEvent<
+              HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+          >
+        | string
+        | string[]
+        | number
+        | { index: number }
+        | { startDate: Date; endDate: Date }
+        | { target: { name?: string; value: unknown } }
+        | CalendarValue
+        | MultiStringItem[],
+    key: string,
+    type: 'single' | 'multiple' = 'single',
+    fromType:
+        | 'simple'
+        | 'calender'
+        | 'select'
+        | 'multi-select'
+        | 'wpeditor'
+        | 'multi-calender' = 'simple',
+    arrayValue: string[] | number[] = []
+) => {
         settingChanged.current = true;
 
         if ( type === 'single' ) {
@@ -625,9 +638,12 @@ const AdminForm: React.FC< AdminFormProps > = ( {
             // multiple checkbox type
             const checkboxEvent =
                 event as React.ChangeEvent< HTMLInputElement >;
-            let prevData: string[] = setting[ key ] || [];
-            if ( ! Array.isArray( prevData ) ) {
-                prevData = [ String( prevData ) ];
+            let prevData: string[] = [];
+            const currentValue = setting[ key ];
+            if (Array.isArray(currentValue)) {
+                prevData = currentValue.filter((item): item is string => typeof item === 'string');
+            } else if (typeof currentValue === 'string') {
+                prevData = [currentValue];
             }
 
             prevData = prevData.filter(
@@ -677,8 +693,9 @@ const AdminForm: React.FC< AdminFormProps > = ( {
         } );
 
         frame.on( 'select', () => {
-            const selection = frame.state().get( 'selection' ).toJSON();
-            const selectedUrl = selection[ 0 ]?.url;
+            const selection = frame.state().get( 'selection' );
+            const selectionArray = selection.toJSON ? selection.toJSON() : [selection.first().toJSON()];
+            const selectedUrl = selectionArray[ 0 ]?.url;
 
             if ( multiple && replaceIndex !== -1 ) {
                 const next = [ ...existingUrls ];
@@ -716,22 +733,19 @@ const AdminForm: React.FC< AdminFormProps > = ( {
     };
 
     const isContain = (
-        key: string,
-        value: string | number | boolean | null = null
+    key: string,
+    value: string | number | boolean | null = null
     ): boolean => {
         const settingValue = setting[ key ];
 
-        // If settingValue is an array
         if ( Array.isArray( settingValue ) ) {
-            // If value is null and settingValue has elements, return true
             if ( value === null && settingValue.length > 0 ) {
                 return true;
             }
-
-            return settingValue.includes( value );
+            // Type narrowing for includes
+            return settingValue.some(item => item === value);
         }
 
-        // If settingValue is not an array
         if ( value === null && Boolean( settingValue ) ) {
             return true;
         }
@@ -786,9 +800,11 @@ const AdminForm: React.FC< AdminFormProps > = ( {
 
         // 3. Dependent Setting (empty array)
         if (
-            field.dependentSetting &&
-            Array.isArray( setting[ field.dependentSetting ] ) &&
-            setting[ field.dependentSetting ].length === 0
+        field.dependentSetting &&
+        setting[field.dependentSetting] !== null &&
+        setting[field.dependentSetting] !== undefined &&
+        Array.isArray( setting[ field.dependentSetting ] ) &&
+        (setting[ field.dependentSetting ] as unknown[]).length === 0
         ) {
             setModulePopupData( {
                 moduleName: '',
@@ -841,7 +857,7 @@ const AdminForm: React.FC< AdminFormProps > = ( {
                             rangeUnit={ inputField.rangeUnit } // for range parameter
                             min={ inputField.min ?? 0 } // for range min value
                             max={ inputField.max ?? 50 } // for range max value
-                            value={ value || inputField.value }
+                            value={ String(value || inputField.value || '') }
                             size={ inputField.size } //Width of the input container.
                             preText={ inputField.preText } //Content displayed before input (icon/text).
                             postText={ inputField.postText } //Content displayed after input (icon/text).
@@ -892,11 +908,7 @@ const AdminForm: React.FC< AdminFormProps > = ( {
                             placeholder={ inputField.placeholder }
                             rowNumber={ inputField.rowNumber } // for row number value
                             colNumber={ inputField.colNumber } // for column number value
-                            value={
-                                value !== undefined && value !== null
-                                    ? value
-                                    : ''
-                            }
+                            value={ String(value || '') }
                             usePlainText={ inputField.usePlainText } // Toggle between textarea and TinyMCE
                             proSetting={ isProSetting(
                                 inputField.proSetting ?? false
@@ -1036,7 +1048,7 @@ const AdminForm: React.FC< AdminFormProps > = ( {
                             id={ inputField.id }
                             name={ inputField.name }
                             type={ inputField.type }
-                            value={ value || '#000000' } // current value of the input; defaults to black if empty
+                            value={ String(value || '#000000') }// current value of the input; defaults to black if empty
                             proSetting={ isProSetting(
                                 inputField.proSetting ?? false
                             ) }
@@ -1713,18 +1725,15 @@ const AdminForm: React.FC< AdminFormProps > = ( {
                             }
                             value={
                                 inputField.multiSelect
-                                    ? Array.isArray( value )
-                                        ? value
-                                        : [
-                                              String(
-                                                  value ??
-                                                      inputField.defaultValue ??
-                                                      ''
-                                              ),
-                                          ]
-                                    : String(
-                                          value ?? inputField.defaultValue ?? ''
-                                      )
+                                    ? Array.isArray(setting[ `${ inputField.key }_options` ])
+                                        ? (setting[ `${ inputField.key }_options` ] as { label: string; value: string }[]).map(
+                                            ( opt ) => ( {
+                                                label: opt.label,
+                                                value: opt.value,
+                                            } )
+                                        )
+                                        : []
+                                    : []
                             }
                             proSetting={ isProSetting(
                                 inputField.proSetting ?? false

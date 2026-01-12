@@ -8,6 +8,20 @@ const meta: Meta<typeof CommonPopup> = {
     title: 'Zyra/Components/CommonPopup',
     component: CommonPopup,
     tags: ['autodocs'],
+    argTypes: {
+        width: {
+            control: {
+                type: 'text', // allows number or string like '600px'
+            },
+            description: 'Popup width (number or CSS value)',
+        },
+        height: {
+            control: {
+                type: 'text',
+            },
+            description: 'Popup height (number or CSS value)',
+        },
+    },
 };
 
 export default meta;
@@ -46,7 +60,7 @@ export const WithHeader: Story = {
                 <CommonPopup
                     open={open}
                     onClose={() => setOpen(false)}
-                    header={{ title: "Popup Header" }}
+                    header={{ title: 'Popup Header' }}
                 >
                     <p>This popup has a custom header.</p>
                     <p>You can include titles, icons, or other elements.</p>
@@ -69,7 +83,7 @@ export const WithFooter: Story = {
                 <CommonPopup
                     open={open}
                     onClose={() => setOpen(false)}
-                    header={{ title: "Popup Header" }}
+                    header={{ title: 'Popup Header' }}
                     footer={
                         <>
                             <Button
@@ -96,8 +110,37 @@ export const WithFooter: Story = {
     },
 };
 
+// export const CustomSize: Story = {
+//     render: () => {
+//         const [open, setOpen] = useState(true);
+
+//         return (
+//             <>
+//                 <Button variant="contained" onClick={() => setOpen(true)}>
+//                     Open Popup with Custom Size
+//                 </Button>
+
+//                 <CommonPopup
+//                     open={open}
+//                     onClose={() => setOpen(false)}
+//                     header={{ title: "Popup Header" }}
+//                     width={600}
+//                     height={300}
+//                 >
+//                     <p>This popup has custom width and height.</p>
+//                     <p>You can adjust the size via props.</p>
+//                 </CommonPopup>
+//             </>
+//         );
+//     },
+// };
+
 export const CustomSize: Story = {
-    render: () => {
+    args: {
+        width: '600',
+        height: '300',
+    },
+    render: (args) => {
         const [open, setOpen] = useState(true);
 
         return (
@@ -107,14 +150,13 @@ export const CustomSize: Story = {
                 </Button>
 
                 <CommonPopup
+                    {...args}
                     open={open}
                     onClose={() => setOpen(false)}
-                    header={{ title: "Popup Header" }}
-                    width={600}
-                    height={300}
+                    header={{ title: 'Popup Header' }}
                 >
                     <p>This popup has custom width and height.</p>
-                    <p>You can adjust the size via props.</p>
+                    <p>You can adjust the size via Storybook controls.</p>
                 </CommonPopup>
             </>
         );

@@ -91,7 +91,7 @@ const settingsData: settingsDataType = {
         },
         {
             key: 'lead_time_format',
-            type: 'settingToggle' as const,
+            type: 'setting-toggle' as const,
             label: 'Lead Format',
             desc: 'Choose the lead time format: Either dynamic (set unique lead time text for all out of stock product) or static (apply a default lead time text for out of stock products).',
             dependent: {
@@ -176,7 +176,6 @@ const settingsData: settingsDataType = {
                     value: 'is_double_optin',
                 },
             ],
-            proSetting: true,
             look: 'toggle',
         },
         {
@@ -208,7 +207,6 @@ const settingsData: settingsDataType = {
                     value: 'is_recaptcha_enable',
                 },
             ],
-            proSetting: true,
             look: 'toggle',
         },
         {
