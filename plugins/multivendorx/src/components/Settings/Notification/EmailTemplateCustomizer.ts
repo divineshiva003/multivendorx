@@ -10,7 +10,7 @@ export default {
 		'Edit and manage individual email templates used across the marketplace.',
 		'multivendorx'
 	),
-	headerIcon: 'store-seo',
+	headerIcon: 'search-discovery',
 	submitUrl: 'settings',
 	modal: [
 		{
@@ -19,7 +19,7 @@ export default {
 			classes: 'full-width',
 			// desc: 'Customise personalised store registration form for marketplace.',
 			// // Add templates configuration with proper content
-			emailTemplates: [temp1, temp2],
+			emailTemplates: [temp1],
 			visibleGroups: ['email'],
 			defaultTemplateId: 'store-registration',
 			context: 'email',

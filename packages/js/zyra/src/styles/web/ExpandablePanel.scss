@@ -20,8 +20,6 @@
             position: relative;
 
             .toggle-icon {
-                padding-right: 0.5rem;
-                border-right: $border-light-small;
                 width: 1.125rem;
 
                 i {
@@ -106,6 +104,8 @@
 
                     .panel-description {
                         font-size: 0.75rem;
+                        display: flex;
+                        gap: 0.5rem;
 
                         p {
                             margin: 0;
@@ -120,6 +120,11 @@
                             }
                         }
                     }
+                }
+
+                &.toggle{
+                    padding-left: 0.5rem;
+                    border-left: $border-light-small;
                 }
             }
 
@@ -142,7 +147,10 @@
                 .settings-btn {
                     display: flex;
                     gap: 0.5rem;
-
+                    list-style-type: none;
+                    .btn-red-color{
+                        font-size: 1rem;
+                    }
                     li{
                         margin: 0;
                     }
@@ -174,13 +182,13 @@
             border-top: 0;
             overflow: hidden;
             transition: max-height 0.4s ease, opacity 0.4s ease;
-            max-height: 0;
+            // max-height: 0;
             opacity: 0;
             border-radius: 0 0 $border-radius-small $border-radius-small;
 
             &.open {
                 opacity: 1;
-                max-height: 50rem;
+                max-height:500rem;
             }
 
             .panel-description {
@@ -272,7 +280,9 @@
     padding: 1.5rem;
     background: $background-white;
     border-radius: $border-radius-small;
-
+    .expandable-panel-group{
+        width: 100%;
+    }
     .welcome-wrapper {
         text-align: center;
         padding: 1rem;
@@ -297,7 +307,13 @@
             padding: 0 3rem;
         }
     }
-    .form-group{
-        padding: 1rem;
+    // .form-group{
+    //     padding: 1rem;
+    // }
+}
+
+.card-content:has(.expandable-panel-group){
+    .expandable-panel-group{
+        width: 100%;
     }
 }

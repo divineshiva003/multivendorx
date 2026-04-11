@@ -46,10 +46,6 @@ const WalletTransaction: React.FC<WalletTransactionProps> = ({ storeId }) => {
 	const [recentDebits, setRecentDebits] = useState([]);
 	const [storeData, setStoreData] = useState(null);
 	const [requestWithdrawal, setRequestWithdrawal] = useState(false);
-	const [validationErrors, setValidationErrors] = useState<{
-		amount?: string;
-		paymentMethod?: string;
-	}>({});
 	const [amount, setAmount] = useState<number>(0);
 	const [note, setNote] = useState('');
 
@@ -58,6 +54,7 @@ const WalletTransaction: React.FC<WalletTransactionProps> = ({ storeId }) => {
 		number | null
 	>(null);
 	const [walletLoading, setWalletLoading] = useState(true);
+	const [errors, setErrors] = useState<Record<string, string>>({});
 
 	// 🔹 Fetch wallet/transaction overview whenever store changes
 	useEffect(() => {
@@ -118,30 +115,24 @@ const WalletTransaction: React.FC<WalletTransactionProps> = ({ storeId }) => {
 	}, [storeId]);
 
 	const handleWithdrawal = () => {
-		// Clear all old errors first
-		setValidationErrors({});
-
 		const newErrors = {};
-		// Amount validations
-		if (!amount || amount <= 0) {
-			newErrors.amount = 'Please enter a valid amount.';
-		} else if (amount > (wallet.available_balance ?? 0)) {
-			newErrors.amount = `Amount cannot be greater than available balance (${formatCurrency(
-				wallet.available_balance
-			)})`;
+
+		if (!storeData?.payment_method || storeData.payment_method === '') {
+			newErrors.payment = __(
+				'Please configure a valid payment method before requesting a withdrawal.',
+				'multivendorx'
+			);
 		}
 
-		// Payment method validation
-		if (!storeData.payment_method) {
-			newErrors.paymentMethod = 'Please select a payment processor.';
+		if (amount > wallet.available_balance) {
+			newErrors.amount = `Amount cannot be greater than available balance (${wallet.available_balance})`;
 		}
 
-		// If any validation errors exist, show them and stop
+		setErrors(newErrors);
+
 		if (Object.keys(newErrors).length > 0) {
-			setValidationErrors(newErrors);
 			return;
 		}
-
 		// Submit request
 		axios({
 			method: 'POST',
@@ -169,6 +160,13 @@ const WalletTransaction: React.FC<WalletTransactionProps> = ({ storeId }) => {
 
 	const AmountChange = (value: number) => {
 		setAmount(value);
+		setErrors((prev) => ({
+			...prev,
+			amount:
+				value > wallet.available_balance
+					? `Amount cannot exceed ${wallet.available_balance}`
+					: '',
+		}));
 	};
 
 	const formatMethod = (method) => {
@@ -194,7 +192,7 @@ const WalletTransaction: React.FC<WalletTransactionProps> = ({ storeId }) => {
 	const fee = amount * (percentage / 100) + fixed;
 
 	const headers = {
-		id: { label: __('ID', 'multivendorx') },
+		id: { label: __('ID', 'multivendorx'), type: 'id' },
 		status: { label: __('Status', 'multivendorx'), type: 'status' },
 		transaction_type: {
 			label: __('Transaction Type', 'multivendorx'),
@@ -297,6 +295,7 @@ const WalletTransaction: React.FC<WalletTransactionProps> = ({ storeId }) => {
 			key: 'transactionType',
 			label: 'Transaction Type',
 			type: 'select',
+			size: 13,
 			options: [
 				{ label: __('Transaction Type', 'multivendorx'), value: '' },
 				{
@@ -319,6 +318,7 @@ const WalletTransaction: React.FC<WalletTransactionProps> = ({ storeId }) => {
 			key: 'transactionStatus',
 			label: 'Financial Transactions',
 			type: 'select',
+			size: 15,
 			options: [
 				{
 					label: __('Financial Transactions', 'multivendorx'),
@@ -420,63 +420,44 @@ const WalletTransaction: React.FC<WalletTransactionProps> = ({ storeId }) => {
 				<Column fullHeight grid={6}>
 					<Card title="Recent payouts">
 						{recentDebits.length > 0 ? (
-							<>
-								{recentDebits.slice(0, 5).map((txn) => {
-									const hasPaymentMethod =
-										!!txn.payment_method;
+							<ItemListUI
+								className="mini-card"
+								items={recentDebits.slice(0, 5).map((txn) => {
+									const hasPaymentMethod = !!txn.payment_method;
 									// Format payment method nicely (e.g., "stripe-connect" -> "Stripe Connect")
-									const formattedPaymentMethod =
-										txn.payment_method
-											? txn.payment_method
-													.replace(/[-_]/g, ' ') // replace - and _ with spaces
-													.replace(/\b\w/g, (char) =>
-														char.toUpperCase()
-													) // capitalize each word
-											: __(
-													'No payment method configured',
-													'multivendorx'
-												);
+									const formattedPaymentMethod = txn.payment_method
+										? txn.payment_method
+											.replace(/[-_]/g, ' ') // replace - and _ with spaces
+											.replace(/\b\w/g, (char) => char.toUpperCase()) // capitalize each word
+										: __('No payment method configured', 'multivendorx');
 
-									return (
-										<div key={txn.id} className="info-item">
-											<div className="details-wrapper">
-												<div className="details">
-													<div className="name">
-														{formattedPaymentMethod}
-														{hasPaymentMethod && (
-															<div className="admin-badge green">
-																Completed
-															</div>
-														)}
+									return {
+										title: formattedPaymentMethod,
+										desc: formatDate(txn.created_at),
+										tags: (
+											<>
+												{hasPaymentMethod && (
+													<div className="admin-badge green">
+														{__('Completed', 'multivendorx')}
 													</div>
-													<div className="des">
-														{formatDate(txn.created_at)}
-													</div>
-												</div>
-											</div>
-
-											<div className="right-details">
+												)}
 												<div
 													className={`price ${
-														parseFloat(txn.debit) <
-														0
+														parseFloat(txn.debit) < 0
 															? 'color-red'
 															: 'color-green'
 													}`}
 												>
 													{formatCurrency(txn.debit)}
 												</div>
-											</div>
-										</div>
-									);
+											</>
+										),
+									};
 								})}
-							</>
+							/>
 						) : (
 							<ComponentStatusView
-								title={__(
-									'No recent payouts transactions found.',
-									'multivendorx'
-								)}
+								title={__('No recent payouts transactions found.', 'multivendorx')}
 							/>
 						)}
 					</Card>
@@ -509,6 +490,24 @@ const WalletTransaction: React.FC<WalletTransactionProps> = ({ storeId }) => {
 											</b>
 											{__(
 												'minimum required to withdraw',
+												'multivendorx'
+											)}
+										</>
+									)}
+								</div>
+								<div className="desc">
+									{walletLoading ? (
+										<Skeleton width={15.625} />
+									) : (
+										<>
+											<b>
+												{' '}
+												{formatCurrency(
+													wallet?.reserve_balance
+												)}{' '}
+											</b>
+											{__(
+												'reserve balance',
 												'multivendorx'
 											)}
 										</>
@@ -666,6 +665,7 @@ const WalletTransaction: React.FC<WalletTransactionProps> = ({ storeId }) => {
 							<FormGroup
 								label={__('Payment Processor', 'multivendorx')}
 								htmlFor="payment_method"
+								notice={errors.payment}
 							>
 								<div className="payment-method">
 									{storeData?.payment_method ? (
@@ -689,7 +689,7 @@ const WalletTransaction: React.FC<WalletTransactionProps> = ({ storeId }) => {
 							<FormGroup
 								label={__('Amount', 'multivendorx')}
 								htmlFor="Amount"
-								notice={validationErrors.amount}
+								notice={errors.amount}
 							>
 								<BasicInputUI
 									type="number"

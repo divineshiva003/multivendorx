@@ -15,6 +15,15 @@ export default {
 
 			options: [
 				{
+					key: 'hide_store_products',
+					label: __('Hide store and products', 'multivendorx'),
+					value: 'hide_store_products',
+					desc: __(
+						'Removes the store and all its products from the marketplace. Customers cannot view the store, access products, or place orders.',
+						'multivendorx'
+					),
+				},
+				{
 					key: 'disable_product_upload',
 					label: __('Disable product upload', 'multivendorx'),
 					value: 'disable_product',
@@ -31,7 +40,7 @@ export default {
 						'Suspends payout processing. Earnings will be released once the store successfully clears the review.',
 						'multivendorx'
 					),
-				}
+				},
 			],
 			selectDeselect: true,
 		},

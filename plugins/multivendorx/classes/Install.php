@@ -27,24 +27,13 @@ class Install {
      * Class constructor
      */
     public function __construct() {
-
-        if ( ! get_option( 'multivendorx_version', false ) ) {
-            $this->create_database_table();
-            $this->create_database_triggers();
-            $this->plugin_create_pages();
-            $this->set_default_modules();
-            $this->set_default_settings();
-        }
-
-        if ( get_option( 'dc_product_vendor_plugin_db_version' ) ) {
-            $this->migrate_mvx_to_multivendorx();
-        }
-
+        add_action( 'init', [$this, 'run_migration'] );
+        
         $this->do_migration();
 
         update_option( 'multivendorx_version', MULTIVENDORX_PLUGIN_VERSION );
 
-        do_action( 'multivendorx_updated' );
+        do_action( 'multivendorx_after_installed' );
     }
 
     /**
@@ -52,6 +41,20 @@ class Install {
      */
     public static function do_migration() {
         // write migration code from 5.0.0.
+    }
+
+    public function run_migration() {
+        if ( ! get_option( 'multivendorx_version', false ) ) {
+            $this->create_database_table();
+            $this->create_database_triggers();
+            $this->plugin_create_pages();
+            $this->set_default_modules();
+            $this->set_default_settings();
+        }
+        
+        if ( get_option( 'dc_product_vendor_plugin_db_version' ) ) {
+            $this->migrate_mvx_to_multivendorx();
+        }
     }
 
     /**
@@ -148,22 +151,6 @@ class Install {
             KEY `idx_order` (`order_id`),
             KEY `idx_commission` (`commission_id`),
             KEY `idx_type` (`transaction_type`)
-        ) $collate;";
-
-        $sql_real_time_transaction = "CREATE TABLE IF NOT EXISTS `{$wpdb->prefix}" . Utill::TABLES['real_time_transaction'] . "` (
-            `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            `receiver_id` bigint(20) unsigned NOT NULL,
-            `order_id` bigint(20) unsigned DEFAULT NULL,
-            `commission_id` bigint(20) unsigned DEFAULT NULL,
-            `receiver_type`Text NOT NULL,
-            `amount` float(20,2) NOT NULL,
-            `currency` varchar(10) NOT NULL,
-            `narration` text NOT NULL,
-            `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (`id`),
-            KEY `idx_store` (`receiver_id`),
-            KEY `idx_order` (`order_id`),
-            KEY `idx_commission` (`commission_id`)
         ) $collate;";
 
         $sql_qna = "CREATE TABLE IF NOT EXISTS `{$wpdb->prefix}" . Utill::TABLES['product_qna'] . "` (
@@ -313,7 +300,6 @@ class Install {
         dbDelta( $sql_store_users );
         dbDelta( $sql_store_meta );
         dbDelta( $sql_transaction );
-        dbDelta( $sql_real_time_transaction );
         dbDelta( $sql_qna );
         dbDelta( $sql_report_abuse );
         dbDelta( $sql_shipping_zone_locations );
@@ -419,7 +405,7 @@ class Install {
             'announcement',
 			'knowledgebase',
 			'simple',
-			'question-answer',
+			'customer-queries',
 			'privacy',
         );
         update_option( Utill::ACTIVE_MODULES_DB_KEY, array_unique( array_merge( $active_modules, $default_modules ) ) );
@@ -928,27 +914,27 @@ class Install {
         update_option( Utill::MULTIVENDORX_SETTINGS['privacy'], $privacy_settings );
 
         $registration_form = array(
-            array(
-                'id'    => 1,
-                'type'  => 'title',
-                'label' => 'Registration Form',
-            ),
-            array(
-                'id'          => 2,
-                'type'        => 'text',
-                'label'       => 'Enter your store name',
-                'required'    => false,
-                'name'        => 'name',
-                'placeholder' => 'text',
-                'readonly'    => true,
-            ),
-            array(
-                'id'    => 3,
-                'type'  => 'button',
-                'label' => 'Submit',
-                'text'  => 'Submit',
-                'name'  => 'submit',
-            ),
+        array(
+        'id'    => 1,
+        'type'  => 'title',
+        'label' => 'Registration Form',
+        ),
+        array(
+        'id'          => 2,
+        'type'        => 'text',
+        'label'       => 'Enter your store name',
+        'required'    => false,
+        'name'        => 'name',
+        'placeholder' => 'text',
+        'readonly'    => true,
+        ),
+        array(
+        'id'    => 3,
+        'type'  => 'button',
+        'label' => 'Submit',
+        'text'  => 'Submit',
+        'name'  => 'submit',
+        ),
         );
 
         $registration_from_settings = array(
@@ -2197,8 +2183,10 @@ class Install {
             );
 
             // add meta in store-meta table.
-            $store->update_meta( 'primary_email', $user->email );
-            $store->update_meta( 'emails', array( $user->email ) );
+            $store->update_meta( 'store_email', array(
+                'list'    => array( $user->email ),
+                'primary' => $user->email,
+            ) );
 
             foreach ( $user_meta as $meta_key => $meta_values ) {
                 // report abuse table data insert.
@@ -2242,39 +2230,39 @@ class Install {
 
                 // country wise shipping.
 				if ( '_mvx_shipping_by_country' === $meta_key ) {
-                     $shipping_meta_map = [
-                        '_mvx_shipping_type_price' => 'multivendorx_shipping_type_price',
-                        '_mvx_additional_product'  => 'multivendorx_additional_product',
-                        '_mvx_additional_qty'      => 'multivendorx_additional_qty',
-                        '_free_shipping_amount'    => 'free_shipping_amount',
-                        '_local_pickup_cost'       => 'local_pickup_cost',
-                    ];
+                    $shipping_meta_map = array(
+						'_mvx_shipping_type_price' => 'multivendorx_shipping_type_price',
+						'_mvx_additional_product'  => 'multivendorx_additional_product',
+						'_mvx_additional_qty'      => 'multivendorx_additional_qty',
+						'_free_shipping_amount'    => 'free_shipping_amount',
+						'_local_pickup_cost'       => 'local_pickup_cost',
+					);
 
-                    foreach ( $meta_values as $item => $value ) {
-                        if ( array_key_exists( $item, $shipping_meta_map ) ) {
-                            $store->update_meta( $shipping_meta_map[ $item ], $value );
-                        }
-                    }
-                    continue;
+					foreach ( $meta_values as $item => $value ) {
+						if ( array_key_exists( $item, $shipping_meta_map ) ) {
+							$store->update_meta( $shipping_meta_map[ $item ], $value );
+						}
+					}
+					continue;
                 }
 
                 if ( '_mvx_country_rates' === $meta_key ) {
-                    $state_rates = get_user_meta( $user_id, '_mvx_state_rates', true);
-                    $result = [];
+                    $state_rates = get_user_meta( $user_id, '_mvx_state_rates', true );
+                    $result      = array();
 
                     if ( ! empty( $meta_values ) ) {
                         foreach ( $meta_values as $country => $cost ) {
-                            $country_obj = new \stdClass();
+                            $country_obj          = new \stdClass();
                             $country_obj->country = $country;
                             $country_obj->cost    = (string) $cost;
-                            $country_obj->states  = [];
+                            $country_obj->states  = array();
 
                             // Check if this country has state data.
                             if ( ! empty( $state_rates[ $country ] ) && is_array( $state_rates[ $country ] ) ) {
                                 foreach ( $state_rates[ $country ] as $state => $state_cost ) {
-                                    $state_obj = new \stdClass();
-                                    $state_obj->state = $state;
-                                    $state_obj->cost  = (string) $state_cost;
+                                    $state_obj             = new \stdClass();
+                                    $state_obj->state      = $state;
+                                    $state_obj->cost       = (string) $state_cost;
                                     $country_obj->states[] = $state_obj;
                                 }
                             }
@@ -2287,39 +2275,38 @@ class Install {
 
                 // Distance wise shipping.
 				if ( '_mvx_shipping_by_distance' === $meta_key ) {
-                     $shipping_meta_map = [
-                        '_default_cost'         => 'distance_default_cost',
-                        '_max_distance'         => 'distance_max',
-                        '_local_pickup_cost'    => 'distance_local_pickup_cost',
-                    ];
+                    $shipping_meta_map = array(
+						'_default_cost'      => 'distance_default_cost',
+						'_max_distance'      => 'distance_max',
+						'_local_pickup_cost' => 'distance_local_pickup_cost',
+					);
 
-                    foreach ( $meta_values as $item => $value ) {
-                        if ( array_key_exists( $item, $shipping_meta_map ) ) {
-                            $store->update_meta( $shipping_meta_map[ $item ], $value );
-                        }
-                    }
-                    continue;
+					foreach ( $meta_values as $item => $value ) {
+						if ( array_key_exists( $item, $shipping_meta_map ) ) {
+							$store->update_meta( $shipping_meta_map[ $item ], $value );
+						}
+					}
+					continue;
                 }
 
                 if ( '_mvx_shipping_by_distance_rates' == $meta_key ) {
-                    $new_meta = [];
-    
+                    $new_meta = array();
+
                     if ( ! empty( $meta_values ) && is_array( $meta_values ) ) {
                         foreach ( $meta_values as $item ) {
                             if ( empty( $item['mvx_distance_unit'] ) || empty( $item['mvx_distance_price'] ) ) {
                                 continue;
                             }
-    
-                            $new_meta[] = [
+
+                            $new_meta[] = array(
                                 'max_distance' => (string) $item['mvx_distance_unit'],
                                 'cost'         => (string) $item['mvx_distance_price'],
-                            ];
+                            );
                         }
                     }
                     $store->update_meta( 'distance_rules', $new_meta );
                     continue;
                 }
-
 
                 // Skip meta keys that are not mapped.
                 if ( ! isset( $map_meta[ $meta_key ] ) ) {
@@ -2334,9 +2321,9 @@ class Install {
                 }
 
                 if ( 'shipping_options' == $new_meta_key ) {
-                    if ($meta_values == 'distance_by_zone' ) {
+                    if ( $meta_values == 'distance_by_zone' ) {
                         $meta_values = 'shipping_by_zone';
-                    } elseif ($meta_values == 'distance_by_shipping' ) {
+                    } elseif ( $meta_values == 'distance_by_shipping' ) {
                         $meta_values = 'shipping_by_distance';
                     } else {
                         $meta_values = 'shipping_by_country';
@@ -2376,16 +2363,16 @@ class Install {
             delete_user_meta( $user_id, 'mvx_customer_follow_vendor' );
         }
 
-        //Shipping zone methods table migrate.
+        // Shipping zone methods table migrate.
         $zone_table = $wpdb->prefix . 'mvx_shipping_zone_methods';
-        $results = $wpdb->get_results( "SELECT * FROM {$zone_table}" );
+        $results    = $wpdb->get_results( "SELECT * FROM {$zone_table}" );
 
         if ( ! empty( $results ) ) {
             foreach ( $results as $row ) {
                 $vendor_id = $row->vendor_id;
-                $store_id = get_user_meta( $vendor_id, Utill::USER_SETTINGS_KEYS['active_store'], true );
-                $meta_key = $row->method_id . '_' . $row->zone_id;
-                $store = new Store($store_id);
+                $store_id  = get_user_meta( $vendor_id, Utill::USER_SETTINGS_KEYS['active_store'], true );
+                $meta_key  = $row->method_id . '_' . $row->zone_id;
+                $store     = new Store( $store_id );
                 $store->update_meta( $meta_key, $row->settings );
             }
         }
@@ -2685,7 +2672,7 @@ class Install {
 		$new_ledger_table = $wpdb->prefix . Utill::TABLES['transaction'];
 
 		$transactions = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-            $wpdb->prepare( "SELECT * FROM {$old_ledger_table}" ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            "SELECT * FROM {$old_ledger_table}", ARRAY_A // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		);
         $store_cache  = array();
 

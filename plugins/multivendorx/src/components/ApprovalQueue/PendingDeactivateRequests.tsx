@@ -10,7 +10,7 @@ import {
 	TableRow,
 } from 'zyra';
 
-const PendingDeactivateRequests: React.FC<object> = ({onCountChange}) => {
+const PendingDeactivateRequests: React.FC<object> = () => {
 	const [rows, setRows] = useState<TableRow[][]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [totalRows, setTotalRows] = useState<number>(0);
@@ -94,7 +94,10 @@ const PendingDeactivateRequests: React.FC<object> = ({onCountChange}) => {
 
 				setRows(stores);
 				setTotalRows(Number(response.headers['x-wp-total']) || 0);
-				onCountChange?.(Number(response.headers['x-wp-total']) || 0);
+				window.multivendorxStore?.setCount(
+					'deactivate-requests',
+					Number(response.headers['x-wp-total']) || 0
+				);
 				setIsLoading(false);
 			})
 			.catch((error) => {
@@ -106,19 +109,15 @@ const PendingDeactivateRequests: React.FC<object> = ({onCountChange}) => {
 	};
 
 	return (
-		<>
-			<div className="admin-table-wrapper">
-				<TableCard
-					headers={headers}
-					rows={rows}
-					totalRows={totalRows}
-					isLoading={isLoading}
-					onQueryUpdate={doRefreshTableData}
-					ids={rowIds}
-					format={appLocalizer.date_format}
-				/>
-			</div>
-		</>
+			<TableCard
+				headers={headers}
+				rows={rows}
+				totalRows={totalRows}
+				isLoading={isLoading}
+				onQueryUpdate={doRefreshTableData}
+				ids={rowIds}
+				format={appLocalizer.date_format}
+			/>
 	);
 };
 

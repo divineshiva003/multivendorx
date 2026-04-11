@@ -18,7 +18,7 @@ type StoreOption = {
 	label: string;
 	value: number;
 };
-const PendingCoupons: React.FC<object> = ({onCountChange}) => {
+const PendingCoupons: React.FC<object> = () => {
 	const [rows, setRows] = useState<TableRow[][]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [totalRows, setTotalRows] = useState<number>(0);
@@ -132,7 +132,7 @@ const PendingCoupons: React.FC<object> = ({onCountChange}) => {
 			type: 'date',
 		},
 		action: {
-			label: 'Action',
+			label: __('Action', 'multivendorx'),
 			render: (row) => {
 				return (
 					<ButtonInputUI
@@ -210,7 +210,10 @@ const PendingCoupons: React.FC<object> = ({onCountChange}) => {
 
 				setRows(coupons);
 				setTotalRows(Number(response.headers['x-wp-total']) || 0);
-				onCountChange?.(Number(response.headers['x-wp-total']) || 0);
+				window.multivendorxStore?.setCount(
+					'coupons',
+					Number(response.headers['x-wp-total']) || 0
+				);
 				setIsLoading(false);
 			})
 			.catch((error) => {
@@ -223,80 +226,78 @@ const PendingCoupons: React.FC<object> = ({onCountChange}) => {
 
 	return (
 		<>
-			<div className="admin-table-wrapper">
-				<TableCard
-					headers={headers}
-					rows={rows}
-					totalRows={totalRows}
-					isLoading={isLoading}
-					onQueryUpdate={doRefreshTableData}
-					ids={rowIds}
-					search={{}}
-					filters={filters}
-					format={appLocalizer.date_format}
-					currency={{
-						currencySymbol: appLocalizer.currency_symbol,
-						priceDecimals: appLocalizer.price_decimals,
-						decimalSeparator: appLocalizer.decimal_separator,
-						thousandSeparator: appLocalizer.thousand_separator,
-						currencyPosition: appLocalizer.currency_position,
+			<TableCard
+				headers={headers}
+				rows={rows}
+				totalRows={totalRows}
+				isLoading={isLoading}
+				onQueryUpdate={doRefreshTableData}
+				ids={rowIds}
+				search={{}}
+				filters={filters}
+				format={appLocalizer.date_format}
+				currency={{
+					currencySymbol: appLocalizer.currency_symbol,
+					priceDecimals: appLocalizer.price_decimals,
+					decimalSeparator: appLocalizer.decimal_separator,
+					thousandSeparator: appLocalizer.thousand_separator,
+					currencyPosition: appLocalizer.currency_position,
+				}}
+			/>
+			{/* Reject Coupon Popup */}
+			{rejectPopupOpen && (
+				<PopupUI
+					open={rejectPopupOpen}
+					onClose={() => {
+						setRejectPopupOpen(false);
+						setRejectReason('');
+						setIsSubmitting(false);
 					}}
-				/>
-				{/* Reject Coupon Popup */}
-				{rejectPopupOpen && (
-					<PopupUI
-						open={rejectPopupOpen}
-						onClose={() => {
-							setRejectPopupOpen(false);
-							setRejectReason('');
-							setIsSubmitting(false);
-						}}
-						width="31.25rem"
-						header={{
-							icon: 'cart',
-							title: __('Reason', 'multivendorx'),
-						}}
-						footer={
-							<ButtonInputUI
-								buttons={[
-									{
-										icon: 'close',
-										text: __('Cancel', 'multivendorx'),
-										color: 'red',
-										onClick: () => {
-											setRejectPopupOpen(false);
-											setRejectReason('');
-											setIsSubmitting(false);
-										},
+					width="31.25rem"
+					header={{
+						icon: 'cart',
+						title: __('Reason', 'multivendorx'),
+					}}
+					footer={
+						<ButtonInputUI
+							buttons={[
+								{
+									icon: 'close',
+									text: __('Cancel', 'multivendorx'),
+									color: 'red',
+									onClick: () => {
+										setRejectPopupOpen(false);
+										setRejectReason('');
+										setIsSubmitting(false);
 									},
-									{
-										icon: 'cross',
-										text: isSubmitting
-											? __(
-													'Submitting...',
-													'multivendorx'
-												)
-											: __('Reject', 'multivendorx'),
-										disabled: isSubmitting,
-										onClick: submitReject,
-									},
-								]}
-							/>
-						}
-					>
-						<TextAreaUI
-							name="reject_reason"
-							value={rejectReason}
-							onChange={(value: string) => setRejectReason(value)}
-							placeholder={__(
-								'Enter reason for rejecting this coupon...',
-								'multivendorx'
-							)}
-							rows={4}
+								},
+								{
+									icon: 'cross',
+									text: isSubmitting
+										? __(
+												'Submitting...',
+												'multivendorx'
+											)
+										: __('Reject', 'multivendorx'),
+									disabled: isSubmitting,
+									onClick: submitReject,
+								},
+							]}
 						/>
-					</PopupUI>
-				)}
-			</div>
+					}
+				>
+					<TextAreaUI
+						name="reject_reason"
+						value={rejectReason}
+						onChange={(value: string) => setRejectReason(value)}
+						placeholder={__(
+							'Enter reason for rejecting this coupon...',
+							'multivendorx'
+						)}
+						rows={4}
+					/>
+				</PopupUI>
+			)}
 		</>
 	);
 };

@@ -633,25 +633,23 @@ class StoreUtil {
             return false;
         }
         $store = Store::get_store( $store_id );
-
         $status           = $store->get( 'status' );
-        $review_settings  = MultiVendorX()->setting->get_setting( 'restriction_for_under_review', array() );
-        $suspend_settings = MultiVendorX()->setting->get_setting( 'restriction_for_suspended', array() );
+        $permissions = MultiVendorX()->util->get_permissions();
 
         if ( $check_payouts ) {
-            if ( 'under_review' === $status && in_array( 'disable_payouts', $review_settings, true ) ) {
-                return true;
-            }
-
-            if ( 'suspended' === $status && in_array( 'disable_payouts', $suspend_settings, true ) ) {
+            if ( in_array( $status, [ 'suspended', 'under_review' ], true ) || $permissions['disable_payouts'] ) {
                 return true;
             }
         } else {
-            if ( 'under_review' === $status && in_array( 'disable_product_upload', $review_settings, true ) ) {
+            if ( 'under_review' === $status || $permissions['disable_product_upload'] ) {
                 return true;
             }
 
-            if ( 'suspended' === $status && in_array( 'store_visible_in_checkout', $suspend_settings, true ) ) {
+            if ( in_array( $status, [ 'suspended', 'under_review' ], true ) || $permissions['hide_store_products'] ) {
+                return true;
+            }
+
+            if ( 'suspended' === $status || $permissions['disable_checkout'] ) {
                 return true;
             }
         }
@@ -704,7 +702,7 @@ class StoreUtil {
 		$data = maybe_unserialize( $phone_meta );
 
 		$country = $data['country_code'] ?? '';
-		$phone   = $data['phone'] ?? '';
+		$phone   = $data['phone'] ?? $data['whatsapp_number'] ?? '';
 
 		return $country . ' ' . $phone;
 	}
@@ -722,8 +720,11 @@ class StoreUtil {
 		if ( empty( $store_slug ) ) {
 			return;
 		}
-		$store_obj  = Store::get_store( $store_slug, 'slug' );
+		$store_obj   = Store::get_store( $store_slug, 'slug' );
 		$store_phone = self::get_phone( $store_obj->get_meta( 'phone' ) );
+        $store_whatsapp = self::get_phone( $store_obj->get_meta( 'whatsapp_number' ) );
+        $whatsapp_message = $store_obj->get_meta( 'whatsapp_pre_filled' );
+        $facebook_page_id = $store_obj->get_meta( 'page_id' );
 
 		ob_start();
 		MultiVendorX()->util->get_template( 'store/store-tabs.php', array( 'store_id' => $store_obj->get_id() ) );
@@ -734,7 +735,7 @@ class StoreUtil {
 			'storeDescription'   => $store_obj->get( 'description' ),
 			'storeSlug'          => $store_slug,
 			'storeId'            => $store_obj->get_id(),
-			'storeEmail'         => $store_obj->get_meta( 'primary_email' ),
+			'storeEmail'         => $store_obj->get_meta( 'store_email' )['primary'] ?? '',
 			'storePhone'         => $store_phone,
 			'facebook'           => $store_obj->get_meta( 'facebook' ),
 			'twitter'            => $store_obj->get_meta( 'twitter' ),
@@ -750,6 +751,9 @@ class StoreUtil {
 			'cancellationPolicy' => $store_obj->get_meta( 'cancellation_policy' ),
 			'storeAddress'       => $store_obj->get_meta( 'address' ),
 			'storeTabs'          => $tabs_html,
+            'whatsapp'           => $store_whatsapp,
+            'whatsapp_message'   => $whatsapp_message,
+            'page_id'            => $facebook_page_id
 		);
 		/**
 		 * Filter store info before returning.

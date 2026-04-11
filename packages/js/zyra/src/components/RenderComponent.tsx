@@ -535,7 +535,7 @@ const RenderComponent: React.FC<RenderProps> = ({
                                 ? 'module-enabled'
                                 : ''
                             }`}
-                        data-cols={inputField.cols}
+                        data-col={inputField.cols}
                         onClick={(e) => handleGroupClick(e, inputField)}
                     >
                         {inputField.label && (
@@ -547,7 +547,7 @@ const RenderComponent: React.FC<RenderProps> = ({
                                 <div className="title">
                                     {inputField.icon && (
                                         <i
-                                            className={`adminfont-${inputField.icon}`}
+                                            className={`adminfont-${inputField.icon} ${inputField.icon}`}
                                         />
                                     )}
                                     {inputField.label}

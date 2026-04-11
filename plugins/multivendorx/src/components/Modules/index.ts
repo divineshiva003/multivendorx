@@ -33,13 +33,13 @@ export default {
 				'https://multivendorx.com/docs/knowledgebase/appointment-product/',
 			//settingsLink: appLocalizer.site_url,
 			proModule: true,
-			reqPluging: [
-				{
-					name: 'WooCommerce Appointments',
-					slug: 'woocommerce-appointments/woocommerce-appointments.php',
-					link: 'https://bookingwp.com/plugins/woocommerce-appointments/',
-				},
-			],
+			// reqPluging: [
+			// 	{
+			// 		name: 'WooCommerce Appointments',
+			// 		slug: 'woocommerce-appointments/woocommerce-appointments.php',
+			// 		link: 'https://bookingwp.com/plugins/woocommerce-appointments/',
+			// 	},
+			// ],
 			category: ['marketplace_types', 'product_types'],
 		},
 		{
@@ -193,7 +193,7 @@ export default {
 		},
 		{
 			id: 'shared-listing',
-			name: __('Shared listing', 'multivendorx'),
+			name: __('Shared Listing', 'multivendorx'),
 			desc: 'Allows more than one store to sell the same product with their own price and stock.',
 			docLink:
 				'https://multivendorx.com/docs/knowledgebase/single-product-multiple-vendors-spmv',
@@ -291,6 +291,7 @@ export default {
 			proModule: true,
 			category: 'payment_management',
 			miniModule: true,
+			reloadOnChange: true,
 		},
 		{
 			id: 'stripe-marketplace',
@@ -302,6 +303,7 @@ export default {
 			proModule: true,
 			category: 'payment_management',
 			miniModule: true,
+			reloadOnChange: true,
 		},
 		// {
 		// 	id: 'mangopay',
@@ -346,7 +348,7 @@ export default {
 			docLink:
 				'https://multivendorx.com/docs/knowledgebase/weight-shipping',
 			settingsLink: `${appLocalizer.admin_dashboard_url}#&tab=settings&subtab=shipping`,
-			proModule: false,
+			proModule: true,
 			reqPluging: [
 				{
 					name: 'Table Rate Shipping',
@@ -367,7 +369,7 @@ export default {
 			reqPluging: [
 				{
 					name: 'Per Product Shipping for WooCommerce',
-					slug: 'woocommerce-per-product-shipping/woocommerce-per-product-shipping.php',
+					slug: 'woocommerce-shipping-per-product/woocommerce-shipping-per-product.php',
 					link: 'https://woocommerce.com/products/per-product-shipping/',
 				},
 			],
@@ -408,8 +410,8 @@ export default {
 			category: 'customer_experience',
 		},
 		{
-			id: 'question-answer',
-			name: __('Question & Answer', 'multivendorx'),
+			id: 'customer-queries',
+			name: __('Customer Queries', 'multivendorx'),
 			desc: 'Customers can publicly ask product questions.',
 			docLink: 'https://multivendorx.com/docs/knowledgebase/NA',
 			proModule: false,
@@ -454,7 +456,7 @@ export default {
 			id: 'search-discovery',
 			name: __('Search & Discovery', 'multivendorx'),
 			desc: 'SEO settings for store pages and products using Rank Math or Yoast SEO.',
-			docLink: 'https://multivendorx.com/docs/knowledgebase/store-seo',
+			docLink: 'https://multivendorx.com/docs/knowledgebase/search-discovery',
 			settingsLink: `${appLocalizer.admin_dashboard_url}#&tab=settings&subtab=search-discovery`,
 			proModule: true,
 			category: ['analytics_tools', 'store_management'],
@@ -507,7 +509,7 @@ export default {
 			name: __('Marketplace Fee', 'multivendorx'),
 			desc: 'Set and manage platform fees for each order or store to cover operational costs',
 			docLink: 'https://multivendorx.com/docs/knowledgebase/NA',
-			settingsLink: `${appLocalizer.admin_dashboard_url}#&tab=settings&subtab=store-commissions`,
+			settingsLink: `${appLocalizer.admin_dashboard_url}#&tab=settings&subtab=commissions`,
 			proModule: true,
 			category: 'marketplace_boosters',
 		},
@@ -516,7 +518,7 @@ export default {
 			name: __('Franchises', 'multivendorx'),
 			desc: 'Enables franchise-style ordering with store-created orders, admin-product ordering, and automatic store assignment based on customer location.',
 			docLink: 'https://multivendorx.com/docs/knowledgebase/NA',
-			settingsLink: `${appLocalizer.admin_dashboard_url}#&tab=settings&subtab=franchises`,
+			settingsLink: `${appLocalizer.admin_dashboard_url}#&tab=settings&subtab=onboarding`,
 			proModule: true,
 			category: ['store_management', 'marketplace_boosters'],
 			miniModule: true,
@@ -528,12 +530,12 @@ export default {
 			desc: 'Payment gateway fees are deducted from vendor commissions by the admin, ensuring platform costs are covered automatically.',
 			docLink:
 				'https://multivendorx.com/docs/knowledgebase/payment-gateway-charge/',
-			settingsLink: `${appLocalizer.admin_dashboard_url}#&tab=settings&subtab=store-commissions`,
+			settingsLink: `${appLocalizer.admin_dashboard_url}#&tab=settings&subtab=commissions`,
 			proModule: false,
 			category: ['store_management', 'payment_management'],
 		},
 		{
-			id: 'advertise-product',
+			id: 'product-advertising',
 			name: __('Advertise Product', 'multivendorx'),
 			desc: 'Paid promotion for products within the marketplace, boosting visibility.',
 			docLink:
@@ -558,7 +560,7 @@ export default {
 			desc: 'Manages stock levels, sends low-stock alerts, and maintains a waitlist for out-of-stock products.',
 			docLink:
 				'https://multivendorx.com/docs/knowledgebase/store-inventory',
-			settingsLink: `${appLocalizer.admin_dashboard_url}#&tab=settings&subtab=inventory`,
+			settingsLink: `${appLocalizer.admin_dashboard_url}#&tab=settings&subtab=store-inventory`,
 			proModule: true,
 			category: 'marketplace_boosters',
 			miniModule: true,
@@ -664,21 +666,6 @@ export default {
 					name: 'Advanced Custom Fields',
 					slug: 'advanced-custom-fields/acf.php',
 					link: 'https://wordpress.org/plugins/advanced-custom-fields/',
-				},
-			],
-			category: 'integration',
-		},
-		{
-			id: 'geo-my-wp',
-			name: __('GEOmyWP', 'multivendorx'),
-			desc: 'Lets stores pinpoint their location on an interactive map, making it easy for customers to discover nearby stores',
-			docLink: 'https://multivendorx.com/docs/knowledgebase/geo-my-wp',
-			proModule: true,
-			reqPluging: [
-				{
-					name: 'GEOmyWP',
-					slug: 'geo-my-wp/geo-my-wp.php',
-					link: 'https://wordpress.org/plugins/geo-my-wp/',
 				},
 			],
 			category: 'integration',

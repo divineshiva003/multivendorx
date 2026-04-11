@@ -66,7 +66,7 @@ class OrderManager {
      * @return  mixed
      */
     public function set_filter_order_query( $query ) {
-        $parent_id = apply_filters( 'mvx_order_parent_filter', 0 );
+        $parent_id = apply_filters( 'multivendorx_order_parent_filter', 0 );
         if ( ! $query['parent'] && $parent_id >= 0 ) {
             $query['parent'] = $parent_id;
         }
@@ -142,26 +142,15 @@ class OrderManager {
                 $this->container['admin']->regenerate_order_commissions( $store_order );
             } else {
                 $store_order = self::create_sub_order( $order, $store_id, $items );
-                do_action( 'mvx_checkout_vendor_order_processed', $store_order, $order );
+                do_action( 'multivendorx_checkout_store_order_processed', $store_order, $order );
             }
 
             $store_order->save();
             $store = new Store( $store_id );
-
-            do_action(
-                'multivendorx_notify_new_order_store',
-                'new_order_store',
-                array(
-                    'admin_email'    => MultiVendorX()->setting->get_setting( 'receiver_email_address' ),
-                    'admin_phone'    => MultiVendorX()->setting->get_setting( 'sms_receiver_phone_number' ),
-                    'store_phone'    => $store->get_meta( Utill::STORE_SETTINGS_KEYS['phone'] ),
-                    'store_email'    => $store->get_meta( Utill::STORE_SETTINGS_KEYS['primary_email'] ),
-                    'customer_email' => $store_order->get_billing_email(),
-                    'customer_phone' => $store_order->get_billing_phone(),
-                    'order_id'       => $store_order->get_id(),
-                    'category'       => 'activity',
-                )
-            );
+            MultiVendorX()->notifications->send_notification_helper('new_order_store', $store, $store_order, [
+                'order_id'       => $store_order->get_id(),
+                'category'       => 'activity',
+            ]);
         }
     }
 
@@ -253,7 +242,7 @@ class OrderManager {
              *
              * @since 3.4.0
              */
-            do_action( 'mvx_checkout_create_order', $parent_order, $order, $items );
+            do_action( 'multivendorx_before_create_sub_order', $parent_order, $order, $items );
 
             return $order;
         } catch ( \Exception $e ) {
@@ -346,7 +335,7 @@ class OrderManager {
                 }
 
                 // Action hook before new item save.
-                do_action( 'mvx_vendor_create_order_line_item', $item, $item->get_product_id(), $order_item, $order );
+                do_action( 'multivendorx_before_create_sub_order_line_item', $item, $item->get_product_id(), $order_item, $order );
 
                 $order->add_item( $item );
             }
@@ -387,7 +376,7 @@ class OrderManager {
                 $item->add_meta_data( Utill::ORDER_META_SETTINGS['store_order_shipping_item_id'], $item_id );
 
                 // Action hook to adjust item before save.
-                do_action( 'mvx_vendor_create_order_shipping_item', $shipping, $item_id, $item, $order );
+                do_action( 'multivendorx_before_create_sub_order_shipping_item', $shipping, $item_id, $item, $order );
 
                 $order->add_item( $shipping );
             }
@@ -417,7 +406,7 @@ class OrderManager {
             $coupon      = new \WC_Coupon( $coupon_code );
             if ( ! in_array(
                 $coupon->get_discount_type(),
-                apply_filters( 'mvx_order_available_coupon_types', array( 'fixed_product', 'percent', 'fixed_cart' ), $order, $coupon ),
+                apply_filters( 'multivendorx_order_available_coupon_types', array( 'fixed_product', 'percent', 'fixed_cart' ), $order, $coupon ),
                 true
             )
             ) {
@@ -444,7 +433,7 @@ class OrderManager {
                 $item->add_meta_data( 'coupon_data', $coupon_data );
 
                 // Action hook to adjust item before save.
-                do_action( 'mvx_checkout_create_order_coupon_item', $item, $coupon, $order );
+                do_action( 'multivendorx_before_create_sub_order_coupon_item', $item, $coupon, $order );
 
                 // Add item to order and save.
                 $order->add_item( $item );

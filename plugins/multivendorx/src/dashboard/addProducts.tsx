@@ -19,7 +19,7 @@ import {
 	ButtonInputUI,
 	Notice,
 } from 'zyra';
-import { applyFilters } from '@wordpress/hooks';
+import { applyFilters, doAction } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
 import { dashNavigate } from '@/services/commonFunction';
 
@@ -112,6 +112,7 @@ const AddProduct = () => {
 
 		const payload = {
 			...product,
+			status: appLocalizer.current_user?.allcaps?.publish_products ? 'publish' : 'draft',
 			images: imagePayload,
 			meta_data: [
 				...product.meta_data,
@@ -131,13 +132,19 @@ const AddProduct = () => {
 					key: 'multivendorx_cancellation_policy',
 					value: product.cancellation_policy || '',
 				},
+				{ key: '_is_auto_draft', value: false }
 			],
 		};
-
+		doAction('multivendorx_before_product_save');
+		const {
+			booking_location_type,
+			booking_duration_unit,
+			...productData
+		} = payload;
 		axios
 			.post(
 				`${appLocalizer.apiUrl}/wc/v3/products/${productId}`,
-				payload,
+				productData,
 				{ headers: { 'X-WP-Nonce': appLocalizer.nonce } }
 			)
 			.then(() => {
@@ -227,6 +234,10 @@ const AddProduct = () => {
 		(m) => m.key === '_reject_note'
 	)?.value;
 
+	const isAutoDraft = product?.meta_data?.some(
+		(m) => m.key === '_is_auto_draft' && m.value === '1'
+	);
+
 	return (
 		<>
 			{translation
@@ -242,9 +253,14 @@ const AddProduct = () => {
 						</div>
 					</div>
 				))}
-			{errorMsg &&
-				<Notice type="error" validity="lifetime" displayPosition="notice" message={errorMsg} />
-			}
+			{errorMsg && (
+				<Notice
+					type="error"
+					validity="lifetime"
+					displayPosition="notice"
+					message={errorMsg}
+				/>
+			)}
 			<NavigatorHeader
 				headerTitle={__('Add Product', 'multivendorx')}
 				headerDescription={__(
@@ -253,9 +269,11 @@ const AddProduct = () => {
 				)}
 				buttons={applyFilters('multivendorx_product_button', [
 					{
-						label: __('view', 'multivendorx'),
-						icon: 'save',
-						onClick: () => window.open(product?.permalink, '_blank'),
+						label: __('View', 'multivendorx'),
+						icon: 'eye',
+						color: 'yellow',
+						onClick: () =>
+							window.open(product?.permalink, '_blank'),
 					},
 					{
 						label: __('Save', 'multivendorx'),
@@ -266,14 +284,9 @@ const AddProduct = () => {
 			/>
 			<Container>
 				<Column grid={3}>
-					<Card title={__('Product type', 'multivendorx')}>
+					<Card title={__('What kind of product is this?', 'multivendorx')} desc={__('Choose the type that best describes what you are selling.', 'multivendorx')}>
 						<FormGroupWrapper>
-							<FormGroup
-								desc={__(
-									'A standalone product with no variant',
-									'multivendorx'
-								)}
-							>
+							<FormGroup>
 								<SelectInputUI
 									name="type"
 									type="single-select"
@@ -294,101 +307,32 @@ const AddProduct = () => {
 							</div>
 						}
 					>
-						<FormGroupWrapper>
-							<FormGroup>
-								<div className="checklist-wrapper">
-									<ul>
+						<div className="checklist-wrapper">
+							<ul>
+								<li
+									className={
+										checklist.name ? 'checked' : ''
+									}
+								>
+									<div className="check-icon">
+										<span></span>
+									</div>
+									<div className="details">
+										<div className="title">
+											Product Name
+										</div>
+										<div className="des">
+											A clear, descriptive title
+											that helps customers find
+											your product
+										</div>
+									</div>
+								</li>
+								{product.type === 'simple' && (
+									<>
 										<li
 											className={
-												checklist.name ? 'checked' : ''
-											}
-										>
-											<div className="check-icon">
-												<span></span>
-											</div>
-											<div className="details">
-												<div className="title">
-													Product Name
-												</div>
-												<div className="des">
-													A clear, descriptive title
-													that helps customers find
-													your product
-												</div>
-											</div>
-										</li>
-										{product.type === 'simple' && (
-											<>
-												<li
-													className={
-														checklist.price
-															? 'checked'
-															: ''
-													}
-												>
-													<div className="check-icon">
-														<span></span>
-													</div>
-													<div className="details">
-														<div className="title">
-															Price
-														</div>
-														<div className="des">
-															Set competitive
-															prices including any
-															sale or discount
-															options
-														</div>
-													</div>
-												</li>
-
-												<li
-													className={
-														checklist.stock
-															? 'checked'
-															: ''
-													}
-												>
-													<div className="check-icon">
-														<span></span>
-													</div>
-													<div className="details">
-														<div className="title">
-															Stock
-														</div>
-														<div className="des">
-															A clear, descriptive
-															title that helps
-															customers find your
-															product
-														</div>
-													</div>
-												</li>
-											</>
-										)}
-										<li
-											className={
-												checklist.image ? 'checked' : ''
-											}
-										>
-											<div className="check-icon">
-												<span></span>
-											</div>
-											<div className="details">
-												<div className="title">
-													Product Images
-												</div>
-												<div className="des">
-													High-quality photos showing
-													your product from multiple
-													angles
-												</div>
-											</div>
-										</li>
-
-										<li
-											className={
-												checklist.categories
+												checklist.price
 													? 'checked'
 													: ''
 											}
@@ -398,19 +342,20 @@ const AddProduct = () => {
 											</div>
 											<div className="details">
 												<div className="title">
-													Category
+													Price
 												</div>
 												<div className="des">
-													Organize your product to
-													help customers browse your
-													store
+													Set competitive
+													prices including any
+													sale or discount
+													options
 												</div>
 											</div>
 										</li>
 
 										<li
 											className={
-												checklist.policies
+												checklist.stock
 													? 'checked'
 													: ''
 											}
@@ -420,32 +365,100 @@ const AddProduct = () => {
 											</div>
 											<div className="details">
 												<div className="title">
-													Policies
+													Stock
 												</div>
 												<div className="des">
-													A clear, descriptive title
-													that helps customers find
-													your product
+													A clear, descriptive
+													title that helps
+													customers find your
+													product
 												</div>
 											</div>
 										</li>
+									</>
+								)}
+								<li
+									className={
+										checklist.image ? 'checked' : ''
+									}
+								>
+									<div className="check-icon">
+										<span></span>
+									</div>
+									<div className="details">
+										<div className="title">
+											Product Images
+										</div>
+										<div className="des">
+											High-quality photos showing
+											your product from multiple
+											angles
+										</div>
+									</div>
+								</li>
 
-										{applyFilters(
-											'product_checklist_items_render',
-											null,
-											checklist,
-											product
-										)}
-									</ul>
-								</div>
-							</FormGroup>
-						</FormGroupWrapper>
+								<li
+									className={
+										checklist.categories
+											? 'checked'
+											: ''
+									}
+								>
+									<div className="check-icon">
+										<span></span>
+									</div>
+									<div className="details">
+										<div className="title">
+											Category
+										</div>
+										<div className="des">
+											Organize your product to
+											help customers browse your
+											store
+										</div>
+									</div>
+								</li>
+
+								<li
+									className={
+										checklist.policies
+											? 'checked'
+											: ''
+									}
+								>
+									<div className="check-icon">
+										<span></span>
+									</div>
+									<div className="details">
+										<div className="title">
+											Policies
+										</div>
+										<div className="des">
+											A clear, descriptive title
+											that helps customers find
+											your product
+										</div>
+									</div>
+								</li>
+
+								{applyFilters(
+									'product_checklist_items_render',
+									null,
+									checklist,
+									product
+								)}
+							</ul>
+						</div>
 					</Card>
 				</Column>
 
 				<Column grid={6}>
-				{rejectNote && (
-					<Card title={__('Product Rejected by Admin', 'multivendorx')}
+					{rejectNote && (
+						<Card
+							title={__(
+								'Product Rejected by Admin',
+								'multivendorx'
+							)}
 						// action={
 						// <ButtonInputUI
 						// 	buttons={[
@@ -457,16 +470,16 @@ const AddProduct = () => {
 						// 		},
 						// 	]}
 						// />}
-					>
-						<Notice
-							type="error"
-							title="Admin Note"
-							displayPosition="inline-notice"
-							message={rejectNote}
-						/>
-					</Card>
-				)}
-					<Card title={__('General information', 'multivendorx')}>
+						>
+							<Notice
+								type="error"
+								title="Admin Note"
+								displayPosition="inline-notice"
+								message={rejectNote}
+							/>
+						</Card>
+					)}
+					<Card title={__('General information - Tell customers what you are selling', 'multivendorx')} desc={__("A good name and description help people find your product and feel confident buying it.", 'multivendorx')}>
 						<FormGroupWrapper>
 							<div className="form-group  ai-form">
 								<label className="settings-form-label">
@@ -489,18 +502,27 @@ const AddProduct = () => {
 										onChange={(value) =>
 											handleChange('name', value)
 										}
-										disabled={modules.includes('shared-listing')}
+										disabled={modules.includes(
+											'shared-listing'
+										) && !isAutoDraft}
 									/>
-									<div className="settings-metabox-description">{__('A unique name for your product', 'multivendorx')}</div>
+									<div className="settings-metabox-description">
+										{__(
+											'Use names your customers would actually search for.',
+											'multivendorx'
+										)}
+									</div>
 								</div>
 							</div>
-
 
 							{productFields.includes('general') && (
 								<>
 									<div className="form-group  ai-form">
 										<label className="settings-form-label">
-											{__('Product short description', 'multivendorx')}
+											{__(
+												'Short description - One-line summary',
+												'multivendorx'
+											)}
 											{applyFilters(
 												'multivendorx_product_field_suggestions',
 												null,
@@ -515,7 +537,9 @@ const AddProduct = () => {
 										<div className="settings-input-content">
 											<TextAreaUI
 												name="short_description"
-												value={product.short_description}
+												value={
+													product.short_description
+												}
 												onChange={(value) =>
 													handleChange(
 														'short_description',
@@ -523,13 +547,21 @@ const AddProduct = () => {
 													)
 												}
 											/>
-											<div className="settings-metabox-description">{__('A short description displayed on product and checkout pages', 'multivendorx')}</div>
+											<div className="settings-metabox-description">
+												{__(
+													'This short texts appears with the product - keep it punchy.',
+													'multivendorx'
+												)}
+											</div>
 										</div>
 									</div>
 
 									<div className="form-group  ai-form">
 										<label className="settings-form-label">
-											{__('Product description', 'multivendorx')}
+											{__(
+												'Full description',
+												'multivendorx'
+											)}
 											{applyFilters(
 												'multivendorx_product_field_suggestions',
 												null,
@@ -552,7 +584,12 @@ const AddProduct = () => {
 													)
 												}
 											/>
-											<div className="settings-metabox-description">{__('A short description displayed on product and checkout pages', 'multivendorx')}</div>
+											<div className="settings-metabox-description">
+												{__(
+													'More detail helps customers feel confident buying.',
+													'multivendorx'
+												)}
+											</div>
 										</div>
 									</div>
 								</>
@@ -561,11 +598,16 @@ const AddProduct = () => {
 					</Card>
 					<PopupUI
 						open={appeal}
-						onClose={() => { setAppeal(false) }}
+						onClose={() => {
+							setAppeal(false);
+						}}
 						width={31.25}
 						header={{
 							icon: 'announcement',
-							title: __('Appeal Rejection Decision', 'multivendorx'),
+							title: __(
+								'Appeal Rejection Decision',
+								'multivendorx'
+							),
 							description: __(
 								'Explain why you believe this product meets marketplace guidelines. Our team will review your appeal within 48 hours.',
 								'multivendorx'
@@ -582,7 +624,10 @@ const AddProduct = () => {
 									},
 									{
 										icon: 'save',
-										text: __('Submit Appeal', 'multivendorx'),
+										text: __(
+											'Submit Appeal',
+											'multivendorx'
+										),
 										// onClick: () => handleSubmit(),
 									},
 								]}
@@ -591,18 +636,19 @@ const AddProduct = () => {
 					>
 						<FormGroupWrapper>
 							<FormGroup
-								label={__('Your appeal message', 'multivendorx')}
+								label={__(
+									'Your appeal message',
+									'multivendorx'
+								)}
 								htmlFor="title"
 							>
-								<TextAreaUI
-									name="content"
-								/>
+								<TextAreaUI name="content" />
 							</FormGroup>
 						</FormGroupWrapper>
 					</PopupUI>
 					{product?.type === 'simple' &&
 						productFields.includes('general') && (
-							<Card title={__('Price', 'multivendorx')}>
+							<Card title={__('Pricing - How much does it cost?', 'multivendorx')} desc={__('Set your normal price. If you are running a promotion, you can add sale price', 'multivendorx')}>
 								<FormGroupWrapper>
 									<FormGroup
 										cols={2}
@@ -648,7 +694,8 @@ const AddProduct = () => {
 						handleChange,
 						productFields,
 						typeFields,
-						modules
+						modules,
+						setFeaturedImage
 					)}
 				</Column>
 				<Column grid={3}>
@@ -717,29 +764,28 @@ const AddProduct = () => {
 										'multivendorx'
 									)}
 									onChange={(val) => {
+										const [file] = Array.isArray(val)
+											? val
+											: [val];
+										const url = file?.url || '';
 										if (!val) {
 											setFeaturedImage(null);
 											return;
 										}
-										const url = val as string;
 										setFeaturedImage({
-											id: 0, // wp.media id not available from current FileInput
+											id: file?.id, // wp.media id not available from current FileInput
 											src: url,
 											thumbnail: url,
 										});
 									}}
 								/>
 							</FormGroup>
-							{applyFilters(
-								'product_image_enhancement',
-								null,
-								{
-									currentImage: featuredImage ?? null,
-									isFeaturedImage: true,
-									setImage: setFeaturedImage,
-									product: product
-								}
-							)}
+							{applyFilters('product_image_enhancement', null, {
+								currentImage: featuredImage ?? null,
+								isFeaturedImage: true,
+								setImage: setFeaturedImage,
+								product: product,
+							})}
 							<FormGroup
 								label={__('Product gallery', 'multivendorx')}
 							>
@@ -759,10 +805,10 @@ const AddProduct = () => {
 											? val
 											: [val];
 
-										const formatted = urls.map((url) => ({
-											id: 0,
-											src: url,
-											thumbnail: url,
+										const formatted = urls.map((file) => ({
+											id: file?.id,
+											src: file?.url,
+											thumbnail: file?.url,
 										}));
 
 										setGalleryImages(formatted);

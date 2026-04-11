@@ -53,6 +53,7 @@ const LatestReview: React.FC<LatestReviewProps> = ({ store_id }) => {
 		},
 		date_created: {
 			label: __('Date', 'multivendorx'),
+			type: 'date'
 		},
 	};
 
@@ -62,6 +63,8 @@ const LatestReview: React.FC<LatestReviewProps> = ({ store_id }) => {
 			rows={rows}
 			isLoading={isLoading}
 			onQueryUpdate={doRefreshTableData}
+			showMenu={false}
+			format={appLocalizer.date_format}
 		/>
 	);
 };

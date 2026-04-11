@@ -49,6 +49,49 @@ class Frontend {
         add_action( 'wp_enqueue_scripts', array( $this, 'load_scripts' ) );
         // user information before registration.
         add_filter( 'multivendorx_add_content_before_form', array( $this, 'add_woocommerce_login_from' ) );
+
+        // Restrict media for store dashboard.
+        add_filter( 'ajax_query_attachments_args', array( $this, 'multivendorx_restrict_store_media' ) );
+
+        add_filter( 'multivendorx_modify_permissions', [$this, 'modify_permissions'] );
+        add_filter( 'multivendorx_dashboard_menu', [ $this, 'hide_menu'], 20 );
+    }
+
+    public function modify_permissions($permissions) {
+        $review_settings  = MultiVendorX()->setting->get_setting( 'restriction_for_under_review', array() );
+        $suspend_settings = MultiVendorX()->setting->get_setting( 'restriction_for_suspended', array() );
+
+        if ( in_array( 'disable_payouts', $review_settings, true ) || in_array( 'disable_payouts', $suspend_settings, true ) ) {
+            $permissions['disable_payouts'] = true;
+        }
+
+        if ( in_array( 'disable_product_upload', $review_settings, true ) ) {
+            $permissions['disable_product_upload'] = true;
+        }
+
+        if ( in_array( 'disable_checkout', $suspend_settings, true ) ) {
+            $permissions['disable_checkout'] = true;
+        }
+
+        if ( in_array( 'hide_store_products', $review_settings, true ) || in_array( 'hide_store_products', $suspend_settings, true ) ) {
+            $permissions['hide_store_products'] = true;
+        }
+        
+        return $permissions;
+    }
+
+    public function hide_menu( $menu ) {
+        $permissions = MultiVendorX()->util->get_permissions();
+        if ($permissions['disable_payouts']) {
+            unset( $menu['wallet'] );
+        }
+
+        if ($permissions['disable_product_upload']) {
+            unset( $menu['products'] );
+        }
+
+        return $menu;
+
     }
 
 	/**
@@ -62,6 +105,9 @@ class Frontend {
 	public function load_scripts() {
 		FrontendScripts::load_scripts();
 		FrontendScripts::enqueue_script( 'multivendorx-store-products-script' );
+        if ( is_account_page() ) {
+            FrontendScripts::enqueue_style( 'multivendorx-store-tabs-style' );
+        }
 	}
 
     /**
@@ -91,7 +137,6 @@ class Frontend {
             $q->set( 'post__not_in', $exclude );
         }
     }
-
     /**
      * Restrict products from cart
      *
@@ -504,4 +549,12 @@ class Frontend {
 
 		return ob_get_clean();
 	}
+
+    public function multivendorx_restrict_store_media( $query ) {
+        if ( in_array( 'store_owner', MultiVendorX()->current_user->roles, true ) ) {
+            $query['author'] = MultiVendorX()->current_user_id;
+        }
+
+        return $query;
+    }
 }

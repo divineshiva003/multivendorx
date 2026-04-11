@@ -13,9 +13,12 @@ import {
 	Container,
 	Column,
 	QueryProps,
+	BlockBuilderUI
 } from 'zyra';
 import axios from 'axios';
 import { __ } from '@wordpress/i18n';
+import { temp1 } from '../../../assets/template/emailTemplate/temp1';
+
 
 const RECIPIENT_CONFIG: Record<string, { icon: string; badge: string }> = {
 	Store: { icon: 'storefront', badge: 'blue' },
@@ -94,7 +97,7 @@ const RecipientBadge: React.FC<RecipientBadgeProps> = ({ recipient }) => {
 	const { icon, badge } =
 		RECIPIENT_CONFIG[recipient.label] ?? RECIPIENT_CONFIG.default;
 	return (
-		<div className={`admin-badge ${badge}`} role="button" tabIndex={0}>
+		<div className={`admin-badge`} role="button" tabIndex={0}>
 			<i className={`adminfont-${icon}`}></i>
 			<span>{recipient.label}</span>
 		</div>
@@ -278,6 +281,19 @@ const EventRules: React.FC = () => {
 		});
 	};
 
+	const handleEmailSave = async (id, data) => {
+	await apiRequest('POST', `notifications/${id}`, {
+		formData: {
+			id: data.id,
+				email_subject: data.email_subject,
+				email_body: data.email_body,
+				sms_content: data.sms_content,
+				system_message: data.system_message,
+			},
+		},
+	);
+};
+
 	const trackCursor = (
 		e: React.MouseEvent<HTMLTextAreaElement | HTMLInputElement>,
 		field: string
@@ -310,6 +326,7 @@ const EventRules: React.FC = () => {
 	const headers = {
 		event: {
 			label: __('Event', 'multivendorx'),
+			width: "55%",
 			render: (row: Notification) => (
 				<div className="notification-details">
 					<span className={`notification-icon ${row.icon}`}></span>
@@ -338,19 +355,23 @@ const EventRules: React.FC = () => {
 		},
 		recipients: {
 			label: __('Recipients', 'multivendorx'),
+			width: "15%",
 			render: (row: Notification) => (
 				<div className="recipients-list">
 					{(row.recipients || []).map((recipient: Recipient) => (
+						<>
 						<RecipientBadge
 							key={recipient.id}
 							recipient={recipient}
 						/>
+						</>
 					))}
 				</div>
 			),
 		},
 		system: {
 			label: __('System', 'multivendorx'),
+			width: "10%",
 			render: (row: Notification) => (
 				<div className="system-column">
 					{Object.entries(row.channels || {}).map(
@@ -392,169 +413,209 @@ const EventRules: React.FC = () => {
 	};
 
 	return (
-		<Container general>
-			<div
-				className="notification-container module-container tab-bg"
-				data-variant="default"
-			>
-				{/* View Toggle + Category Filter */}
-				<div className="choice-toggle-wrapper view-toggle">
-					<div className="category-filter">
-						{uniqueTags.map((tag) => (
-							<div
-								key={tag}
-								className={`category-item ${activeTag === tag ? 'active' : ''}`}
-								role="button"
-								tabIndex={0}
-								onClick={(e) => {
+		<div
+			className="notification-container module-container tab-bg"
+			data-variant="default"
+		>
+			{/* View Toggle + Category Filter */}
+			<div className="choice-toggle-wrapper view-toggle">
+				<div className="category-filter">
+					{uniqueTags.map((tag) => (
+						<div
+							key={tag}
+							className={`category-item ${activeTag === tag ? 'active' : ''}`}
+							role="button"
+							tabIndex={0}
+							onClick={(e) => {
+								e.stopPropagation();
+								setActiveTag(tag);
+							}}
+							onKeyDown={(e) => {
+								if (e.key === 'Enter') {
 									e.stopPropagation();
 									setActiveTag(tag);
-								}}
-								onKeyDown={(e) => {
-									if (e.key === 'Enter') {
-										e.stopPropagation();
-										setActiveTag(tag);
-									}
-								}}
-							>
-								{tag}
-							</div>
-						))}
-					</div>
-					<div className="tabs-wrapper">
-						{(['list', 'grid'] as const).map((mode) => (
-							<div
-								key={mode}
-								role="button"
-								tabIndex={0}
-								onClick={() => setViewMode(mode)}
-								onKeyDown={(e) =>
-									e.key === 'Enter' && setViewMode(mode)
 								}
-								className="toggle-option"
-							>
-								<input
-									className="choice-toggle-form-input"
-									type="radio"
-									id={`${mode}-view`}
-									name="view-mode"
-									value={mode}
-									checked={viewMode === mode}
-									readOnly
-								/>
-								<label htmlFor={`${mode}-view`}>
-									<i
-										className={
-											mode === 'list'
-												? 'adminfont-editor-list-ul'
-												: 'adminfont-module'
-										}
-									></i>
-								</label>
-							</div>
-						))}
-					</div>
-				</div>
-
-				{viewMode === 'list' && (
-					<Column>
-						<TableCard
-							headers={headers}
-							rows={filteredNotifications}
-							showMenu={false}
-							isLoading={isLoading}
-							onQueryUpdate={fetchNotifications}
-							format={appLocalizer.date_format}
-							onRowClick={(row: Notification) => {
-								setEditingNotification(row.id);
-								setNotificationId(row.id);
 							}}
-						/>
-					</Column>
-				)}
-
-				{openChannel && (
-					<PopupUI
-						open={!!openChannel}
-						onClose={() => setOpenChannel(null)}
-						width={31.25}
-						height="70%"
-						header={{
-							icon: 'cart',
-							title: `${
-								openChannel === 'system'
-									? __('System Notification', 'multivendorx')
-									: openChannel === 'sms'
-										? __('SMS Message', 'multivendorx')
-										: __('Email Message', 'multivendorx')
-							} - ${editNotification?.event ?? ''}`,
-						}}
-						footer={
-							<ButtonInputUI
-								buttons={[
-									{
-										icon: 'close',
-										text: __('Cancel', 'multivendorx'),
-										color: 'red',
-										onClick: () => setOpenChannel(null),
-									},
-								]}
+						>
+							{tag}
+						</div>
+					))}
+				</div>
+				<div className="tabs-wrapper">
+					{(['list', 'grid'] as const).map((mode) => (
+						<div
+							key={mode}
+							role="button"
+							tabIndex={0}
+							onClick={() => setViewMode(mode)}
+							onKeyDown={(e) =>
+								e.key === 'Enter' && setViewMode(mode)
+							}
+							className="toggle-option"
+						>
+							<input
+								className="choice-toggle-form-input"
+								type="radio"
+								id={`${mode}-view`}
+								name="view-mode"
+								value={mode}
+								checked={viewMode === mode}
+								readOnly
 							/>
-						}
-					>
-						<>
-							<FormGroupWrapper>
-								{openChannel === 'system' && (
+							<label htmlFor={`${mode}-view`}>
+								<i
+									className={
+										mode === 'list'
+											? 'adminfont-editor-list-ul'
+											: 'adminfont-module'
+									}
+								></i>
+							</label>
+						</div>
+					))}
+				</div>
+			</div>
+
+			{viewMode === 'list' && (
+				<Column>
+					<TableCard
+						headers={headers}
+						rows={filteredNotifications}
+						showMenu={false}
+						isLoading={isLoading}
+						onQueryUpdate={fetchNotifications}
+						format={appLocalizer.date_format}
+						onRowClick={(row: Notification) => {
+							setEditingNotification(row.id);
+							setNotificationId(row.id);
+						}}
+					/>
+				</Column>
+			)}
+
+			{openChannel && (
+				<PopupUI
+					open={!!openChannel}
+					onClose={() => setOpenChannel(null)}
+					width={31.25}
+					height="70%"
+					header={{
+						icon: 'cart',
+						title: `${
+							openChannel === 'system'
+								? __('System Notification', 'multivendorx')
+								: openChannel === 'sms'
+									? __('SMS Message', 'multivendorx')
+									: __('Email Message', 'multivendorx')
+						} - ${editNotification?.event ?? ''}`,
+					}}
+					footer={
+						<ButtonInputUI
+							buttons={[
+								{
+									icon: 'close',
+									text: __('Cancel', 'multivendorx'),
+									color: 'red',
+									onClick: () => setOpenChannel(null),
+								},
+							]}
+						/>
+					}
+				>
+					<>
+						<FormGroupWrapper>
+							{openChannel === 'system' && (
+								<FormGroup
+									label={__(
+										'System Message',
+										'multivendorx'
+									)}
+									htmlFor="system-message"
+								>
+									<BlockBuilderUI
+										key={formData.id}
+										name="system_message_builder"
+										value={
+											formData.email_body
+												? JSON.parse(formData.email_body)
+												: {
+													emailTemplates: [temp1],
+													activeEmailTemplateId: 'store-registration',
+												}
+										}
+										onChange={(data) => {
+											const updatedForm = {
+												...formData,
+												email_body_builder: data,
+												email_body: JSON.stringify(data),
+											};
+											if (!updatedForm.id) return;
+
+											setFormData(updatedForm);
+											handleEmailSave(updatedForm.id, updatedForm);
+										}}
+										field={{
+											key: 'email_body_builder',
+											context: 'email', 
+											visibleGroups: ['email'], 
+											emailTemplates: [temp1],
+										}}
+									/>
+								</FormGroup>
+							)}
+							{openChannel === 'sms' && (
+								<FormGroup
+									label={__(
+										'SMS Content',
+										'multivendorx'
+									)}
+									htmlFor="sms-content"
+								>
+									<TextAreaUI
+										name="sms_content"
+										value={formData.sms_content || ''}
+										onClick={(e) =>
+											trackCursor(e, 'sms_content')
+										}
+										onChange={(value) => {
+											// sms: onChange DOES autosave
+											setFormData({
+												...formData,
+												sms_content: value,
+											});
+											handleAutoSave(formData.id);
+										}}
+										onBlur={() =>
+											handleAutoSave(formData.id)
+										}
+									/>
+								</FormGroup>
+							)}
+							{openChannel === 'mail' && (
+								<>
 									<FormGroup
+										cols={2}
 										label={__(
-											'System Message',
+											'Email Subject',
 											'multivendorx'
 										)}
-										htmlFor="system-message"
+										htmlFor="email-subject"
 									>
-										<TextAreaUI
-											name="system_message"
+										<BasicInputUI
+											name="email_subject"
 											value={
-												formData.system_message || ''
+												formData.email_subject || ''
 											}
 											onClick={(e) =>
-												trackCursor(e, 'system_message')
+												trackCursor(
+													e,
+													'email_subject'
+												)
 											}
 											onChange={(value) => {
-												// system: onChange does NOT autosave — only onBlur/onKeyDown do
 												setFormData({
 													...formData,
-													system_message: value,
-												});
-											}}
-											onBlur={() =>
-												handleAutoSave(formData.id)
-											}
-											onKeyDown={() =>
-												handleAutoSave(formData.id)
-											}
-										/>
-									</FormGroup>
-								)}
-								{openChannel === 'sms' && (
-									<FormGroup
-										label={__(
-											'SMS Content',
-											'multivendorx'
-										)}
-										htmlFor="sms-content"
-									>
-										<TextAreaUI
-											name="sms_content"
-											value={formData.sms_content || ''}
-											onClick={(e) =>
-												trackCursor(e, 'sms_content')
-											}
-											onChange={(value) => {
-												// sms: onChange DOES autosave
-												setFormData({
-													...formData,
-													sms_content: value,
+													email_subject: value,
 												});
 												handleAutoSave(formData.id);
 											}}
@@ -563,327 +624,292 @@ const EventRules: React.FC = () => {
 											}
 										/>
 									</FormGroup>
-								)}
-								{openChannel === 'mail' && (
-									<>
-										<FormGroup
-											cols={2}
-											label={__(
-												'Email Subject',
-												'multivendorx'
-											)}
-											htmlFor="email-subject"
+									<FormGroup
+										cols={2}
+										label={__(
+											'Email Body',
+											'multivendorx'
+										)}
+										htmlFor="email-body"
+									>
+										<TextAreaUI
+											name="email_body"
+											value={
+												formData.email_body || ''
+											}
+											onClick={(e) =>
+												trackCursor(e, 'email_body')
+											}
+											onChange={(value) => {
+												setFormData({
+													...formData,
+													email_body: value,
+												});
+												handleAutoSave(formData.id);
+											}}
+											onBlur={() =>
+												handleAutoSave(formData.id)
+											}
+										/>
+									</FormGroup>
+								</>
+							)}
+							{systemTags?.length > 0 && (
+								<div className="tag-list">
+									{systemTags.map((tag, idx) => (
+										<span
+											key={idx}
+											className="tag-item"
+											onClick={() =>
+												insertAtCursor(tag)
+											}
 										>
-											<BasicInputUI
-												name="email_subject"
-												value={
-													formData.email_subject || ''
-												}
-												onClick={(e) =>
-													trackCursor(
-														e,
-														'email_subject'
+											{tag}
+										</span>
+									))}
+								</div>
+							)}
+						</FormGroupWrapper>
+					</>
+				</PopupUI>
+			)}
+
+			{editingNotification && (
+				<PopupUI
+					open={!!editingNotification}
+					onClose={() => setEditingNotification(null)}
+					width={60.25}
+					height="80%"
+					header={{
+						icon: 'notification',
+						title: `${__('Settings', 'multivendorx')} - ${editNotification?.event ?? ''}`,
+						description: editNotification?.description,
+					}}
+				>
+					<FormGroupWrapper>
+						<FormGroup
+							label={__('Delivery method', 'multivendorx')}
+						>
+							<div className="buttons-wrapper left">
+								{Object.entries(
+									notifications.find(
+										(n) => n.id === editingNotification
+									)?.channels || {}
+								).map(([channel, enabled]) => {
+									const cfg = CHANNEL_CONFIG[channel];
+									if (!cfg) {
+										return null;
+									}
+									return (
+										<div
+											key={channel}
+											className={`admin-badge ${enabled ? 'purple' : ''}`}
+										>
+											<i className={cfg.icon}></i>
+											<span>{cfg.label}</span>
+											<i
+												onClick={() =>
+													toggleChannel(
+														editingNotification,
+														channel
 													)
 												}
-												onChange={(value) => {
-													setFormData({
-														...formData,
-														email_subject: value,
-													});
-													handleAutoSave(formData.id);
-												}}
-												onBlur={() =>
-													handleAutoSave(formData.id)
-												}
+												className={`icon ${enabled ? 'adminfont-eye' : 'adminfont-eye-blocked'}`}
 											/>
-										</FormGroup>
-										<FormGroup
-											cols={2}
-											label={__(
-												'Email Body',
-												'multivendorx'
-											)}
-											htmlFor="email-body"
+										</div>
+									);
+								})}
+							</div>
+						</FormGroup>
+						<FormGroup label={__('Recipients', 'multivendorx')}>
+							<div className="buttons-wrapper left">
+								{defaultRecipients?.map((r: Recipient) => {
+									const { icon } =
+										RECIPIENT_CONFIG[r.label] ??
+										RECIPIENT_CONFIG.default;
+									return (
+										<div
+											key={r.id}
+											className={`admin-badge ${r.enabled ? 'purple' : ''}`}
 										>
-											<TextAreaUI
-												name="email_body"
-												value={
-													formData.email_body || ''
-												}
-												onClick={(e) =>
-													trackCursor(e, 'email_body')
-												}
-												onChange={(value) => {
-													setFormData({
-														...formData,
-														email_body: value,
-													});
-													handleAutoSave(formData.id);
-												}}
-												onBlur={() =>
-													handleAutoSave(formData.id)
-												}
-											/>
-										</FormGroup>
-									</>
-								)}
-								{systemTags?.length > 0 && (
-									<div className="tag-list">
-										{systemTags.map((tag, idx) => (
-											<span
-												key={idx}
-												className="tag-item"
+											<i className={icon}></i>
+											<span>{r.label}</span>
+											<i
 												onClick={() =>
-													insertAtCursor(tag)
+													toggleRecipient(
+														editingNotification,
+														r.id
+													)
 												}
-											>
-												{tag}
-											</span>
-										))}
-									</div>
-								)}
-							</FormGroupWrapper>
-						</>
-					</PopupUI>
-				)}
+												className={`icon ${r.enabled ? 'adminfont-eye' : 'adminfont-eye-blocked'}`}
+											/>
+										</div>
+									);
+								})}
+							</div>
+						</FormGroup>
 
-				{editingNotification && (
-					<PopupUI
-						open={!!editingNotification}
-						onClose={() => setEditingNotification(null)}
-						width={31.25}
-						height="70%"
-						header={{
-							icon: 'notification',
-							title: `${__('Settings', 'multivendorx')} - ${editNotification?.event ?? ''}`,
-							description: editNotification?.description,
-						}}
-					>
-						<FormGroupWrapper>
+						{customRecipients?.length > 0 && (
 							<FormGroup
-								label={__('Delivery method', 'multivendorx')}
+								label={__(
+									'Custom Recipients',
+									'multivendorx'
+								)}
 							>
 								<div className="buttons-wrapper left">
-									{Object.entries(
-										notifications.find(
-											(n) => n.id === editingNotification
-										)?.channels || {}
-									).map(([channel, enabled]) => {
-										const cfg = CHANNEL_CONFIG[channel];
-										if (!cfg) {
-											return null;
-										}
-										return (
-											<div
-												key={channel}
-												className={`admin-badge ${enabled ? 'purple' : ''}`}
-											>
-												<i className={cfg.icon}></i>
-												<span>{cfg.label}</span>
-												<i
-													onClick={() =>
-														toggleChannel(
-															editingNotification,
-															channel
-														)
-													}
-													className={`icon ${enabled ? 'adminfont-eye' : 'adminfont-eye-blocked'}`}
-												/>
-											</div>
-										);
-									})}
-								</div>
-							</FormGroup>
-							<FormGroup label={__('Recipients', 'multivendorx')}>
-								<div className="buttons-wrapper left">
-									{defaultRecipients?.map((r: Recipient) => {
-										const { icon } =
-											RECIPIENT_CONFIG[r.label] ??
-											RECIPIENT_CONFIG.default;
-										return (
+									{customRecipients.map(
+										(r: Recipient) => (
 											<div
 												key={r.id}
 												className={`admin-badge ${r.enabled ? 'purple' : ''}`}
 											>
-												<i className={icon}></i>
+												<i className="adminfont-mail"></i>
 												<span>{r.label}</span>
 												<i
+													className="delete-btn adminfont-delete"
 													onClick={() =>
-														toggleRecipient(
+														deleteRecipient(
 															editingNotification,
 															r.id
 														)
 													}
-													className={`icon ${r.enabled ? 'adminfont-eye' : 'adminfont-eye-blocked'}`}
 												/>
 											</div>
-										);
-									})}
+										)
+									)}
 								</div>
 							</FormGroup>
+						)}
+					</FormGroupWrapper>
 
-							{customRecipients?.length > 0 && (
-								<FormGroup
-									label={__(
-										'Custom Recipients',
-										'multivendorx'
-									)}
-								>
-									<div className="buttons-wrapper left">
-										{customRecipients.map(
-											(r: Recipient) => (
-												<div
-													key={r.id}
-													className={`admin-badge ${r.enabled ? 'purple' : ''}`}
-												>
-													<i className="adminfont-mail"></i>
-													<span>{r.label}</span>
-													<i
-														className="delete-btn adminfont-delete"
-														onClick={() =>
-															deleteRecipient(
-																editingNotification,
-																r.id
-															)
-														}
-													/>
-												</div>
-											)
-										)}
-									</div>
-								</FormGroup>
-							)}
-						</FormGroupWrapper>
+					<div className="drawer-add-recipient">
+						<input
+							type="text"
+							className="basic-input"
+							placeholder="Type the email address of the additional recipient you want to notify, then click 'Add'. "
+							value={newRecipientValue}
+							onChange={(e) =>
+								setNewRecipientValue(e.target.value)
+							}
+							onKeyPress={(e) =>
+								e.key === 'Enter' &&
+								addRecipient(editingNotification)
+							}
+						/>
+						<ButtonInputUI
+							buttons={[
+								{
+									icon: 'plus',
+									text: __('Add', 'multivendorx'),
+									color: 'purple',
+									onClick: () =>
+										addRecipient(editingNotification),
+								},
+							]}
+						/>
+					</div>
+				</PopupUI>
+			)}
 
-						<div className="drawer-add-recipient">
-							<input
-								type="text"
-								className="basic-input"
-								placeholder="Type the email address of the additional recipient you want to notify, then click 'Add'. "
-								value={newRecipientValue}
-								onChange={(e) =>
-									setNewRecipientValue(e.target.value)
-								}
-								onKeyPress={(e) =>
-									e.key === 'Enter' &&
-									addRecipient(editingNotification)
-								}
-							/>
-							<ButtonInputUI
-								buttons={[
-									{
-										icon: 'plus',
-										text: __('Add', 'multivendorx'),
-										color: 'purple',
-										onClick: () =>
-											addRecipient(editingNotification),
-									},
-								]}
-							/>
-						</div>
-					</PopupUI>
-				)}
-
-				{viewMode === 'grid' && (
-					<div className="module-option-row">
-						{filteredNotifications.map((notif) => (
-							<div
-								key={notif.id}
-								className="module-list-item notification-card"
-							>
-								<div className="module-body">
-									<div className="module-header">
-										<div className="icon">
-											<i
-												className={`notification-icon adminfonts ${notif.icon}`}
-											/>
-										</div>
-									</div>
-									<div className="module-details">
-										<div className="meta-name">
-											{notif.event}
-										</div>
-										<div className="tag-wrapper">
-											{(notif.recipients || []).map(
-												(r) => (
-													<RecipientBadge
-														key={r.id}
-														recipient={r}
-														onToggle={() =>
-															toggleRecipient(
-																notif.id,
-																r.id
-															)
-														}
-														onDelete={
-															r.canDelete
-																? () =>
-																		deleteRecipient(
-																			notif.id,
-																			r.id
-																		)
-																: undefined
-														}
-													/>
-												)
-											)}
-										</div>
-										<div className="meta-description">
-											{notif.description}
-										</div>
-									</div>
-								</div>
-								<div className="footer-wrapper">
-									<div className="module-footer">
-										<div className="system-column">
-											{Object.entries(
-												notif.channels || {}
-											).map(([channel, enabled]) => {
-												const cfg =
-													CHANNEL_CONFIG[channel];
-												if (!cfg) {
-													return null;
-												}
-												return (
-													<i
-														key={channel}
-														className={`adminfont-${cfg.icon} admin-badge ${cfg.badge} ${!enabled ? 'disable' : ''}`}
-														onClick={(e) => {
-															e.stopPropagation();
-															toggleChannel(
-																notif.id,
-																channel
-															);
-														}}
-													/>
-												);
-											})}
-										</div>
-										<ButtonInputUI
-											buttons={[
-												{
-													icon: 'edit',
-													text: 'Manage',
-													color: 'purple',
-													onClick: () => {
-														setEditingNotification(
-															notif.id
-														);
-														setNotificationId(
-															notif.id
-														);
-													},
-												},
-											]}
+			{viewMode === 'grid' && (
+				<div className="module-option-row">
+					{filteredNotifications.map((notif) => (
+						<div
+							key={notif.id}
+							className="module-list-item notification-card"
+						>
+							<div className="module-body">
+								<div className="module-header">
+									<div className="icon">
+										<i
+											className={`notification-icon adminfonts ${notif.icon}`}
 										/>
 									</div>
 								</div>
+								<div className="module-details">
+									<div className="meta-name">
+										{notif.event}
+									</div>
+									<div className="tag-wrapper">
+										{(notif.recipients || []).map(
+											(r) => (
+												<RecipientBadge
+													key={r.id}
+													recipient={r}
+													onToggle={() =>
+														toggleRecipient(
+															notif.id,
+															r.id
+														)
+													}
+													onDelete={
+														r.canDelete
+															? () =>
+																	deleteRecipient(
+																		notif.id,
+																		r.id
+																	)
+															: undefined
+													}
+												/>
+											)
+										)}
+									</div>
+									<div className="meta-description">
+										{notif.description}
+									</div>
+								</div>
 							</div>
-						))}
-					</div>
-				)}
-			</div>
-		</Container>
+							<div className="footer-wrapper">
+								<div className="module-footer">
+									<div className="system-column">
+										{Object.entries(
+											notif.channels || {}
+										).map(([channel, enabled]) => {
+											const cfg =
+												CHANNEL_CONFIG[channel];
+											if (!cfg) {
+												return null;
+											}
+											return (
+												<i
+													key={channel}
+													className={`adminfont-${cfg.icon} admin-badge ${cfg.badge} ${!enabled ? 'disable' : ''}`}
+													onClick={(e) => {
+														e.stopPropagation();
+														toggleChannel(
+															notif.id,
+															channel
+														);
+													}}
+												/>
+											);
+										})}
+									</div>
+									<ButtonInputUI
+										buttons={[
+											{
+												icon: 'edit',
+												text: 'Manage',
+												color: 'purple',
+												onClick: () => {
+													setEditingNotification(
+														notif.id
+													);
+													setNotificationId(
+														notif.id
+													);
+												},
+											},
+										]}
+									/>
+								</div>
+							</div>
+						</div>
+					))}
+				</div>
+			)}
+		</div>
 	);
 };
 

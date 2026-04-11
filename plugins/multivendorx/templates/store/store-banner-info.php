@@ -42,7 +42,7 @@ $banner_slider     = $meta_data['banner_slider'] ?? array();
 <div class="multivendorx-banner <?php echo esc_attr( $selected_template ); ?>">
     <div class="banner">
         <?php if ( 'static_image' === $banner_type ) : ?>
-            <?php if ( ! empty( $banner )  && is_string( $banner ) ) : ?>
+            <?php if ( ! empty( $banner ) && is_string( $banner ) ) : ?>
                 <div class="banner-img" >
                     <img src="<?php echo esc_url( $banner ); ?>" alt="">
                 </div>
@@ -129,11 +129,6 @@ $banner_slider     = $meta_data['banner_slider'] ?? array();
                     <i class="dashicons dashicons-linkedin"></i>
                 </a>
             <?php endif; ?>
-
-            <?php do_action( 'mvx_vendor_store_header_social_link', $store_id ); ?>
-        </div>
-        <div class='multivendorx-btn-area'>
-            <?php do_action( 'mvx_additional_button_at_banner' ); ?>
         </div>
     </div>
     <?php

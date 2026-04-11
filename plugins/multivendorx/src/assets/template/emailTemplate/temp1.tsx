@@ -2,568 +2,278 @@ import { __ } from '@wordpress/i18n';
 
 export const temp1 = {
 	id: 'store-registration',
-	name: __('Store Registration', 'multivendorx'),
-	previewText: __(
-		'Welcome to our marketplace! Complete your store setup to get started.',
-		'multivendorx'
-	),
+	name: __('Sales Report', 'multivendorx'),
+	// previewText: __(
+	// 	'Welcome to our marketplace! Complete your store setup to get started.',
+	// 	'multivendorx'
+	// ),
 	blocks: [
-		// Header Section
 		{
 			id: 1,
-			type: 'section',
-			name: 'email-section-header',
-			layout: '1',
+			type: 'heading',
+			name: 'email-heading-welcome',
+			text: __('Hi Store Owner', 'multivendorx'),
+			level: 1,
 			style: {
-				backgroundColor: '#f8f9fa',
-				paddingTop: 1.875,
-				paddingBottom: 1.875,
-				paddingLeft: 2.5,
-				paddingRight: 2.5,
+				fontSize: 1.125,
 			},
 		},
 		{
 			id: 2,
-			type: 'image',
-			name: 'email-image-logo',
-			src: '{{marketplace_logo}}',
-			alt: __('Marketplace Logo', 'multivendorx'),
-			style: {
-				width: 9.375,
-				height: 'auto',
-				marginTop: 0,
-				marginBottom: 0,
-				marginLeft: 'auto',
-				marginRight: 'auto',
-				display: 'block',
-			},
-		},
-		{
-			id: 3,
-			type: 'section',
-			name: 'email-section-main',
-			layout: '1',
-			style: {
-				backgroundColor: '#ffffff',
-				paddingTop: 2.5,
-				paddingBottom: 2.5,
-				paddingLeft: 2.5,
-				paddingRight: 2.5,
-			},
-		},
-		{
-			id: 4,
-			type: 'heading',
-			name: 'email-heading-welcome',
-			text: __('Welcome to MultiVendorX Marketplace!', 'multivendorx'),
-			level: 1,
-			style: {
-				backgroundColor: 'transparent',
-				color: '#1a1a1a',
-				fontSize: 2,
-				fontWeight: '700',
-				textAlign: 'center',
-				marginBottom: 1.25,
-			},
-		},
-		{
-			id: 5,
-			type: 'heading',
-			name: 'email-heading-greeting',
-			text: __('Hello {{vendor_name}},', 'multivendorx'),
-			level: 3,
-			style: {
-				backgroundColor: 'transparent',
-				color: '#4a5568',
-				fontSize: 1.125,
-				fontWeight: 'normal',
-				marginBottom: 0.9375,
-			},
-		},
-		{
-			id: 6,
 			type: 'richtext',
 			name: 'email-text-welcome-message',
-			html: __(
-				"Thank you for joining our growing community of sellers! We're thrilled to have you on board and can't wait to see what you'll create. Your store registration has been received and is currently being reviewed.",
-				'multivendorx'
-			),
+			html: __("Here's your sales report for the week of April 1-7, 2026.", 'multivendorx'),
 			style: {
-				backgroundColor: 'transparent',
 				color: '#2d3748',
-				fontSize: 1,
-				lineHeight: 1.7,
-				marginBottom: 1.25,
+				fontSize: 0.9,
 			},
 		},
+
+		// column start
 		{
-			id: 7,
-			type: 'heading',
-			name: 'email-heading-next-steps',
-			text: __("Here's what happens next:", 'multivendorx'),
-			level: 3,
-			style: {
-				backgroundColor: 'transparent',
-				color: '#1a1a1a',
-				fontSize: 1.125,
-				fontWeight: '600',
-				marginBottom: 0.9375,
-			},
-		},
-		{
-			id: 8,
+			id: 3,
 			type: 'columns',
-			name: 'email-columns-steps',
-			layout: '3',
+			name: 'email-columns',
+			layout:'3',
 			style: {
-				backgroundColor: '#f8fafc',
-				paddingTop: 1.875,
-				paddingBottom: 1.875,
-				paddingLeft: 1.25,
-				paddingRight: 1.25,
-				borderRadius: 0.75,
-				marginBottom: 1.875,
+				backgroundColor: '#e8e8e8',
+				paddingTop: 1.313,
+				paddingBottom: 1.313,
+				marginTop: 2.5,
+				borderRadius: 0.313,
+				gap: 2
 			},
+			columns: [
+				[
+					{
+						id: 4,
+						type: 'heading',
+						name: 'email-heading-welcome',
+						text: __('48', 'multivendorx'),
+						level: 1,
+						style: {
+							fontSize: 2,
+							lineHeight: 1,
+							textAlign: 'center'
+						},
+					},
+					{
+						id: 5,
+						type: 'richtext',
+						name: 'email-text-welcome-message',
+						html: __("Total orders", 'multivendorx'),
+						style: {
+							color: '#2d3748',
+							fontSize: 0.9,
+							textAlign: 'center'
+
+						},
+					},
+				],
+				[
+					{
+						id: 6,
+						type: 'heading',
+						name: 'email-heading-welcome',
+						text: __('$3,240', 'multivendorx'),
+						level: 1,
+						style: {
+							fontSize: 2,
+							lineHeight: 1,
+							textAlign: 'center'
+
+						},
+					},
+					{
+						id: 7,
+						type: 'richtext',
+						name: 'email-text-welcome-message',
+						html: __("Total sales", 'multivendorx'),
+						style: {
+							color: '#2d3748',
+							fontSize: 0.9,
+							textAlign: 'center'
+						},
+					},
+				],
+				[
+					{
+						id: 8,
+						type: 'heading',
+						name: 'email-heading-welcome',
+						text: __('$2,831', 'multivendorx'),
+						level: 1,
+						style: {
+							fontSize: 2,
+							lineHeight: 1,
+							textAlign: 'center',
+							color: '#59a937'
+						},
+					},
+					{
+						id: 9,
+						type: 'richtext',
+						name: 'email-text-welcome-message',
+						html: __("Your earnings", 'multivendorx'),
+						style: {
+							color: '#2d3748',
+							fontSize: 0.9,
+							textAlign: 'center'
+						},
+					},
+				],
+			],			
 		},
-		{
-			id: 9,
-			type: 'heading',
-			name: 'email-heading-step1',
-			text: __('1. Verification', 'multivendorx'),
-			level: 4,
-			style: {
-				backgroundColor: 'transparent',
-				color: '#007cba',
-				fontSize: 1.125,
-				fontWeight: '600',
-				textAlign: 'center',
-				marginBottom: 0.625,
-			},
-		},
+
+		// 1st price column
 		{
 			id: 10,
-			type: 'richtext',
-			name: 'email-text-step1',
-			html: __(
-				'Identity and business verification process begins.',
-				'multivendorx'
-			),
+			type: 'columns',
+			name: 'email-columns',
+			layout:'3',
 			style: {
-				backgroundColor: 'transparent',
-				color: '#4a5568',
-				fontSize: 0.875,
-				textAlign: 'center',
+				paddingTop: 3,
 			},
+			columns: [
+				[
+					{
+						id: 11,
+						type: 'richtext',
+						name: 'email-text-welcome-message',
+						html: __("Marketplace commission (10%)", 'multivendorx'),
+						style: {
+							color: '#2d3748',
+							fontSize: 1,
+							textAlign: 'right'
+						},
+					},
+				],
+				[
+					{
+						id: 12,
+						type: 'richtext',
+						name: 'email-text-welcome-message',
+						html: __("−$324.00", 'multivendorx'),
+						style: {
+							color: '#2d3748',
+							fontSize: 1,
+							fontWeight: 600,
+							textAlign: 'right'
+						},
+					},
+				],			
+			]
 		},
-		{
-			id: 11,
-			type: 'heading',
-			name: 'email-heading-step2',
-			text: __('2. Store Setup', 'multivendorx'),
-			level: 4,
-			style: {
-				backgroundColor: 'transparent',
-				color: '#007cba',
-				fontSize: 1.125,
-				fontWeight: '600',
-				textAlign: 'center',
-				marginBottom: 0.625,
-			},
-		},
-		{
-			id: 12,
-			type: 'richtext',
-			name: 'email-text-step2',
-			html: __(
-				'Configure your store settings and add products.',
-				'multivendorx'
-			),
-			style: {
-				backgroundColor: 'transparent',
-				color: '#4a5568',
-				fontSize: 0.875,
-				textAlign: 'center',
-			},
-		},
+		// 2nd price column
 		{
 			id: 13,
-			type: 'heading',
-			name: 'email-heading-step3',
-			text: __('3. Start Selling', 'multivendorx'),
-			level: 4,
+			type: 'columns',
+			name: 'email-columns',
+			layout:'3',
 			style: {
-				backgroundColor: 'transparent',
-				color: '#007cba',
-				fontSize: 1.125,
-				fontWeight: '600',
-				textAlign: 'center',
-				marginBottom: 0.625,
+				paddingTop: 0.5,
 			},
+			columns: [
+				[
+					{
+						id: 14,
+						type: 'richtext',
+						name: 'email-text-welcome-message',
+						html: __("Total refunds", 'multivendorx'),
+						style: {
+							color: '#2d3748',
+							fontSize: 1,
+							textAlign: 'right'
+						},
+					},
+				],
+				[
+					{
+						id: 15,
+						type: 'richtext',
+						name: 'email-text-welcome-message',
+						html: __("−$85.00", 'multivendorx'),
+						style: {
+							color: '#d90d0d',
+							fontSize: 1,
+							fontWeight: 600,
+							textAlign: 'right'
+						},
+					},
+				],			
+			]
 		},
-		{
-			id: 14,
-			type: 'richtext',
-			name: 'email-text-step3',
-			html: __('Go live and start reaching customers!', 'multivendorx'),
-			style: {
-				backgroundColor: 'transparent',
-				color: '#4a5568',
-				fontSize: 0.875,
-				textAlign: 'center',
-			},
-		},
-		{
-			id: 15,
-			type: 'section',
-			name: 'email-section-cta',
-			layout: '1',
-			style: {
-				backgroundColor: '#ffffff',
-				paddingTop: 1.25,
-				paddingBottom: 2.5,
-				paddingLeft: 2.5,
-				paddingRight: 2.5,
-				textAlign: 'center',
-			},
-		},
+
+		// 3rd price column
 		{
 			id: 16,
-			type: 'button',
-			name: 'email-button-setup',
-			text: __('Complete Your Store Setup', 'multivendorx'),
-			url: '{{setup_store_link}}',
-			style: {
-				backgroundColor: '#007cba',
-				color: '#ffffff',
-				fontSize: 1.125,
-				fontWeight: '600',
-				paddingTop: 0.9375,
-				paddingRight: 2.1875,
-				paddingBottom: 0.9375,
-				paddingLeft: 2.1875,
-				borderRadius: 3.125,
-				textAlign: 'center',
-				display: 'inline-block',
-				marginTop: 1.25,
-				marginBottom: 1.25,
-			},
-		},
-		{
-			id: 17,
-			type: 'heading',
-			name: 'email-heading-benefits',
-			text: __("What You'll Get:", 'multivendorx'),
-			level: 2,
-			style: {
-				backgroundColor: 'transparent',
-				color: '#1a1a1a',
-				fontSize: 1.5,
-				fontWeight: '600',
-				textAlign: 'center',
-				marginBottom: 1.875,
-			},
-		},
-		{
-			id: 18,
 			type: 'columns',
-			name: 'email-columns-benefits',
-			layout: '2-50',
+			name: 'email-columns',
+			layout:'3',
 			style: {
-				backgroundColor: '#ffffff',
-				paddingTop: 1.25,
-				paddingBottom: 1.875,
-				paddingLeft: 2.5,
-				paddingRight: 2.5,
+				paddingTop: 0.5,
 			},
+			columns: [
+				[
+					{
+						id: 17,
+						type: 'richtext',
+						name: 'email-text-welcome-message',
+						html: __("Net earnings", 'multivendorx'),
+						style: {
+							color: '#2d3748',
+							fontSize: 1,
+							textAlign: 'right'
+						},
+					},
+				],
+				[
+					{
+						id: 18,
+						type: 'richtext',
+						name: 'email-text-welcome-message',
+						html: __("$2324.00", 'multivendorx'),
+						style: {
+							color: '#59a937',
+							fontSize: 1,
+							fontWeight: 600,
+							textAlign: 'right'
+						},
+					},
+				],			
+			]
 		},
 		{
 			id: 19,
 			type: 'richtext',
-			name: 'email-text-benefit1',
-			html: __(
-				'✓ Access to {{customer_count}}+ customers',
-				'multivendorx'
-			),
+			name: 'email-text-welcome-message',
+			html: __("Your payout will be processed within 2–3 business days. Reply to this email for any questions.", 'multivendorx'),
 			style: {
-				backgroundColor: 'transparent',
 				color: '#2d3748',
-				fontSize: 1,
-				marginBottom: 0.625,
+				fontSize: 1.125,
+				marginTop: 6,
 			},
 		},
 		{
 			id: 20,
 			type: 'richtext',
-			name: 'email-text-benefit2',
-			html: __(
-				'✓ Zero monthly fees - pay only when you sell',
-				'multivendorx'
-			),
+			name: 'email-text-welcome-message',
+			html: __("Best regards,", 'multivendorx'),
 			style: {
-				backgroundColor: 'transparent',
-				color: '#2d3748',
+				color: '#61666eff',
 				fontSize: 1,
-				marginBottom: 0.625,
+				marginBottom: 0.313,
+				marginTop: 5,
 			},
 		},
 		{
 			id: 21,
-			type: 'richtext',
-			name: 'email-text-benefit3',
-			html: __('✓ 24/7 Seller Support', 'multivendorx'),
-			style: {
-				backgroundColor: 'transparent',
-				color: '#2d3748',
-				fontSize: 1,
-				marginBottom: 0.625,
-			},
-		},
-		{
-			id: 22,
-			type: 'richtext',
-			name: 'email-text-benefit4',
-			html: __('✓ Marketing tools & analytics', 'multivendorx'),
-			style: {
-				backgroundColor: 'transparent',
-				color: '#2d3748',
-				fontSize: 1,
-			},
-		},
-		{
-			id: 23,
-			type: 'section',
-			name: 'email-section-faq',
-			layout: '1',
-			style: {
-				backgroundColor: '#f8f9fa',
-				paddingTop: 2.5,
-				paddingBottom: 2.5,
-				paddingLeft: 2.5,
-				paddingRight: 2.5,
-			},
-		},
-		{
-			id: 24,
 			type: 'heading',
-			name: 'email-heading-faq',
-			text: __('Frequently Asked Questions', 'multivendorx'),
-			level: 2,
+			name: 'email-heading-welcome',
+			text: __('The Marketplace Team', 'multivendorx'),
+			level: 6,
 			style: {
-				backgroundColor: 'transparent',
-				color: '#1a1a1a',
-				fontSize: 1.5,
-				fontWeight: '600',
-				textAlign: 'center',
-				marginBottom: 1.875,
-			},
-		},
-		{
-			id: 25,
-			type: 'heading',
-			name: 'email-heading-faq1',
-			text: __('How long does verification take?', 'multivendorx'),
-			level: 4,
-			style: {
-				backgroundColor: 'transparent',
-				color: '#007cba',
 				fontSize: 1,
-				fontWeight: '600',
-				marginBottom: 0.3125,
-			},
-		},
-		{
-			id: 26,
-			type: 'richtext',
-			name: 'email-text-faq1',
-			html: __(
-				'Usually within 24-48 hours during business days.',
-				'multivendorx'
-			),
-			style: {
-				backgroundColor: 'transparent',
-				color: '#4a5568',
-				fontSize: 0.9375,
-				marginBottom: 1.25,
-			},
-		},
-		{
-			id: 27,
-			type: 'heading',
-			name: 'email-heading-faq2',
-			text: __('What are the selling fees?', 'multivendorx'),
-			level: 4,
-			style: {
-				backgroundColor: 'transparent',
-				color: '#007cba',
-				fontSize: 1,
-				fontWeight: '600',
-				marginBottom: 0.3125,
-			},
-		},
-		{
-			id: 28,
-			type: 'richtext',
-			name: 'email-text-faq2',
-			html: __(
-				'Commission rates start from {{commission_rate}}% per sale. No hidden fees!',
-				'multivendorx'
-			),
-			style: {
-				backgroundColor: 'transparent',
-				color: '#4a5568',
-				fontSize: 0.9375,
-				marginBottom: 1.25,
-			},
-		},
-		{
-			id: 29,
-			type: 'heading',
-			name: 'email-heading-faq3',
-			text: __('Can I sell internationally?', 'multivendorx'),
-			level: 4,
-			style: {
-				backgroundColor: 'transparent',
-				color: '#007cba',
-				fontSize: 1,
-				fontWeight: '600',
-				marginBottom: 0.3125,
-			},
-		},
-		{
-			id: 30,
-			type: 'richtext',
-			name: 'email-text-faq3',
-			html: __(
-				'Yes! Our marketplace supports global selling with multiple currencies.',
-				'multivendorx'
-			),
-			style: {
-				backgroundColor: 'transparent',
-				color: '#4a5568',
-				fontSize: 0.9375,
-			},
-		},
-		{
-			id: 31,
-			type: 'section',
-			name: 'email-section-footer',
-			layout: '1',
-			style: {
-				backgroundColor: '#2d3748',
-				paddingTop: 2.5,
-				paddingBottom: 1.875,
-				paddingLeft: 2.5,
-				paddingRight: 2.5,
-				textAlign: 'center',
-			},
-		},
-		{
-			id: 32,
-			type: 'columns',
-			name: 'email-columns-footer-links',
-			layout: '3',
-			style: {
-				backgroundColor: 'transparent',
-				marginBottom: 1.25,
-			},
-		},
-		{
-			id: 33,
-			type: 'button',
-			name: 'email-button-help',
-			text: __('Help Center', 'multivendorx'),
-			url: '{{help_center_link}}',
-			style: {
-				backgroundColor: 'transparent',
-				color: '#a0aec0',
-				fontSize: 0.875,
-				fontWeight: 'normal',
-				textDecoration: 'none',
-				padding: 0,
-			},
-		},
-		{
-			id: 34,
-			type: 'button',
-			name: 'email-button-terms',
-			text: __('Terms', 'multivendorx'),
-			url: '{{terms_link}}',
-			style: {
-				backgroundColor: 'transparent',
-				color: '#a0aec0',
-				fontSize: 0.875,
-				fontWeight: 'normal',
-				textDecoration: 'none',
-				padding: 0,
-			},
-		},
-		{
-			id: 35,
-			type: 'button',
-			name: 'email-button-privacy',
-			text: __('Privacy', 'multivendorx'),
-			url: '{{privacy_link}}',
-			style: {
-				backgroundColor: 'transparent',
-				color: '#a0aec0',
-				fontSize: 0.875,
-				fontWeight: 'normal',
-				textDecoration: 'none',
-				padding: 0,
-			},
-		},
-		{
-			id: 36,
-			type: 'richtext',
-			name: 'email-text-copyright',
-			html: __(
-				'© {{current_year}} MultiVendorX Marketplace. All rights reserved.',
-				'multivendorx'
-			),
-			style: {
-				backgroundColor: 'transparent',
-				color: '#718096',
-				fontSize: 0.8125,
-				textAlign: 'center',
-				marginTop: 1.25,
-			},
-		},
-		{
-			id: 37,
-			type: 'divider',
-			name: 'email-divider-footer',
-			style: {
-				borderTop: '1px solid #4a5568',
-				marginTop: 1.25,
-				marginBottom: 1.25,
-			},
-		},
-		{
-			id: 38,
-			type: 'richtext',
-			name: 'email-text-company-address',
-			html: __('{{company_address}}', 'multivendorx'),
-			style: {
-				backgroundColor: 'transparent',
-				color: '#718096',
-				fontSize: 0.8125,
-				textAlign: 'center',
-				marginBottom: 1.25,
-			},
-		},
-		{
-			id: 39,
-			type: 'button',
-			name: 'email-button-unsubscribe',
-			text: __('Unsubscribe from marketing emails', 'multivendorx'),
-			url: '{{unsubscribe_link}}',
-			style: {
-				backgroundColor: 'transparent',
-				color: '#a0aec0',
-				fontSize: 0.75,
-				fontWeight: 'normal',
-				textDecoration: 'underline',
-				padding: 0,
 			},
 		},
 	],

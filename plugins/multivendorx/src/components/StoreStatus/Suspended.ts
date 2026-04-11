@@ -15,14 +15,20 @@ export default {
 
 			options: [
 				{
-					key: 'store_visible_in_checkout',
-					label: __(
-						'Keep store visible but disable checkout',
+					key: 'hide_store_products',
+					label: __('Hide store and products', 'multivendorx'),
+					value: 'hide_store_products',
+					desc: __(
+						'Removes the store and all its products from the marketplace. Customers cannot view the store, access products, or place orders.',
 						'multivendorx'
 					),
-					value: 'store_visible_in_checkout',
+				},
+				{
+					key: 'disable_checkout',
+					label: __('Disable checkout', 'multivendorx'),
+					value: 'disable_checkout',
 					desc: __(
-						'Displays the store and its products but prevents customers from placing new orders. Freeze all pending payments.',
+						'Prevents customers from placing new orders from this store while keeping the store and its products visible.',
 						'multivendorx'
 					),
 				},

@@ -29,16 +29,19 @@ import {
 	NavigatorHeader,
 	CalendarInputUI,
 	TableRow,
+	ItemListUI,
 } from 'zyra';
 import axios from 'axios';
 import { __ } from '@wordpress/i18n';
 import {
+	dashNavigate,
 	formatCurrency,
 	formatDate,
 	formatTimeAgo,
 	truncateText,
 } from '@/services/commonFunction';
 import VisitorsMap from './visitorsMap';
+import { useNavigate } from 'react-router-dom';
 
 const getCSSVar = (name) =>
 	getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -84,7 +87,7 @@ const Dashboard: React.FC = () => {
 	const [recentOrderIds, setRecentOrderIds] = useState<number[]>([]);
 	const [topProductRows, setTopProductRows] = useState<TableRow[][]>([]);
 	const [topProductIds, setTopProductIds] = useState<number[]>([]);
-
+	const navigate = useNavigate();
 	const access =
 		appLocalizer.settings_databases_value?.['privacy']?.[
 			'customer_information_access'
@@ -94,25 +97,60 @@ const Dashboard: React.FC = () => {
 	// Table headers
 	const recentOrderHeaders = {
 		id: {
-			label: __('Order Id', 'multivendorx'),
+			label: __('Order ID', 'multivendorx'),
+			render: (row) => (
+				<span
+					onClick={() =>
+						dashNavigate(navigate, [
+							'orders',
+							'view',
+							String(row.id),
+						])
+					}
+					className='link-item'
+				>
+					#{row.id}
+				</span>
+			),
 		},
-		date: {
-			label: __('Order Date', 'multivendorx'),
+		date_created: {
+			label: __('Date', 'multivendorx'),
 			type: 'date',
 		},
 		products: {
 			label: __('Product Name', 'multivendorx'),
+			width: 14,
 			render: (row) =>
-				row.products && row.products.length > 0
-					? row.products.map((product, index) => (
-							<div key={index} className="product-wrapper">
-								{product.name}
-							</div>
+				row.line_items?.length
+					? row.line_items.map((item) => (
+							<InfoItem
+								key={item.id}
+								title={item.name}
+								onClick={() =>
+									dashNavigate(navigate, [
+										'products',
+										'edit',
+										String(item.product_id),
+									])
+								}
+								avatar={{
+									image: item.image?.src || '',
+									iconClass: item.image?.src
+										? ''
+										: 'single-product',
+								}}
+								descriptions={[
+									{
+										label: __('Qty:', 'multivendorx'),
+										value: item.quantity,
+									},
+								]}
+							/>
 						))
 					: '-',
 		},
-		amount: {
-			label: __('Total Amount', 'multivendorx'),
+		total: {
+			label: __('Total', 'multivendorx'),
 			type: 'currency',
 		},
 		status: {
@@ -120,40 +158,39 @@ const Dashboard: React.FC = () => {
 			type: 'status',
 		},
 	};
-
 	const topProductHeaders = {
-		id: {
-			label: __('#', 'multivendorx'),
-			isNumeric: true,
-			type: 'id',
-		},
-
 		name: {
 			label: __('Product Name', 'multivendorx'),
+			width: 18,
+			render: (row) => {
+				return (
+					<InfoItem
+						title={row.name}
+						onClick={() =>
+							dashNavigate(navigate, [
+								'products',
+								'edit',
+								String(row.id),
+							])
+						}
+						avatar={{
+							image: row.images?.[0]?.src || '',
+							iconClass: row.images?.[0]?.src
+								? ''
+								: 'single-product',
+						}}
+						descriptions={[
+							{
+								label: __('SKU:', 'multivendorx'),
+								value: row.sku || '—',
+							},
+						]}
+					/>
+				);
+			},
 		},
-
-		popularity_bar: {
-			label: __('Popularity', 'multivendorx'),
-			render: (row, index) => (
-				<div className="progress-bar">
-					<div className={`progress-bar admin-color${index + 1}`}>
-						<span
-							className={`progress-bar admin-bg-color${index + 1}`}
-							style={{ width: `${row.popularity_bar}%` }}
-						/>
-					</div>
-				</div>
-			),
-		},
-
-		popularity_percent: {
+		total_sales: {
 			label: __('Sales', 'multivendorx'),
-			render: (row, index) => (
-				<div className={`admin-badge admin-color${index + 1}`}>
-					{row.popularity_percent}%
-				</div>
-			),
-			isNumeric: true,
 		},
 	};
 	// Helper function to get dynamic greeting
@@ -255,8 +292,12 @@ const Dashboard: React.FC = () => {
 						per_page: 4,
 						orderby: 'date',
 						order: 'desc',
-						after: dateRange.startDate.toISOString().replace('Z', ''),
-						before: dateRange.endDate.toISOString().replace('Z', ''),
+						after: dateRange.startDate
+							.toISOString()
+							.replace('Z', ''),
+						before: dateRange.endDate
+							.toISOString()
+							.replace('Z', ''),
 					},
 				})
 				.then((response) => {
@@ -298,7 +339,6 @@ const Dashboard: React.FC = () => {
 				});
 		}
 
-		// Top Products
 		axios
 			.get(`${appLocalizer.apiUrl}/wc/v3/products`, {
 				headers: { 'X-WP-Nonce': appLocalizer.nonce },
@@ -314,24 +354,17 @@ const Dashboard: React.FC = () => {
 			})
 			.then((response) => {
 				const products = response.data;
-				const maxSales = Math.max(
-					...products.map((p) => parseInt(p.total_sales) || 0)
+
+				// keep only products that have sales
+				const topProducts = products.filter(
+					(p) => parseInt(p.total_sales) > 0
 				);
 
-				const processedProducts = products.map((p) => {
-					const sales = parseInt(p.total_sales) || 0;
-					const popularity =
-						maxSales > 0 ? Math.round((sales / maxSales) * 100) : 0;
-					return {
-						id: p.id,
-						name: p.name,
-						sales,
-						popularity,
-					};
-				});
+				// store full product response
+				setTopProductRows(topProducts);
 
-				setTopProductRows(processedProducts);
-				setTopProductIds(processedProducts.map((p) => p.id));
+				// only store ids separately
+				setTopProductIds(topProducts.map((p) => p.id));
 			});
 
 		// Recent Orders
@@ -344,27 +377,13 @@ const Dashboard: React.FC = () => {
 					orderby: 'date',
 					meta_key: 'multivendorx_store_id',
 					value: appLocalizer.store_id,
+					status: ['pending', 'processing', 'completed', 'on-hold'],
 					after: dateRange.startDate.toISOString().replace('Z', ''),
 					before: dateRange.endDate.toISOString().replace('Z', ''),
 				},
 			})
 			.then((response) => {
-				const orders = response.data.map((order) => ({
-					id: order.id,
-					products:
-						order.line_items?.map((item) => ({
-							name: item.name,
-							image: item.image?.src || item.image_url || '-',
-						})) || [],
-					store_name: order.store_name || '-',
-					amount: formatCurrency(order.total),
-					commission_amount: order.commission_amount
-						? formatCurrency(order.commission_amount)
-						: '-',
-					date: order.date_created,
-					status: order.status,
-					currency_symbol: order.currency_symbol,
-				}));
+				const orders = response.data;
 
 				setRecentOrderRows(orders);
 				setRecentOrderIds(orders.map((o) => o.id));
@@ -392,49 +411,47 @@ const Dashboard: React.FC = () => {
 			})
 			.catch(() => setLastWithdraws([]));
 
-		// Customers - keep using InfoItem (no TableCard needed)
 		axios
 			.get(`${appLocalizer.apiUrl}/wc/v3/orders`, {
 				headers: { 'X-WP-Nonce': appLocalizer.nonce },
 				params: {
-					per_page: 50,
-					status: ['completed', 'processing'],
+					per_page: 50, // Reduced from 100; 50 is usually plenty to find 5 unique users
+					status: 'completed,processing', // WC REST API often prefers comma-separated strings for status
 					meta_key: 'multivendorx_store_id',
 					meta_value: appLocalizer.store_id,
-					after: dateRange.startDate.toISOString().replace('Z', ''),
-					before: dateRange.endDate.toISOString().replace('Z', ''),
+					after: dateRange.startDate.toISOString().split('.')[0], // Cleaner ISO format
+					before: dateRange.endDate.toISOString().split('.')[0],
+					_fields: 'id,customer_id,billing', // ONLY fetch what you need to identify the customer
 				},
 			})
-			.then((response) => {
-				const customersMap = {};
+			.then(({ data }) => {
+				if (!Array.isArray(data)) {
+					setCustomers([]);
+					return;
+				}
 
-				response.data.forEach((order) => {
-					const key = order.customer_id || order.billing?.email;
-					if (!key) {
-						return;
+				const seen = new Set();
+				const uniqueCustomers = [];
+
+				for (const order of data) {
+					const identifier =
+						order.customer_id !== 0
+							? order.customer_id
+							: order.billing?.email;
+
+					if (identifier && !seen.has(identifier)) {
+						seen.add(identifier);
+						uniqueCustomers.push(order);
 					}
 
-					if (!customersMap[key]) {
-						customersMap[key] = {
-							id: order.customer_id || key,
-							name: `${order.billing.first_name} ${order.billing.last_name}`,
-							email: order.billing.email,
-							total_spent: 0,
-							order_count: 0,
-						};
+					if (uniqueCustomers.length === 5) {
+						break;
 					}
-
-					customersMap[key].total_spent += Number(order.total);
-					customersMap[key].order_count += 1;
-				});
-
-				const topCustomers = Object.values(customersMap)
-					.sort((a, b) => b.total_spent - a.total_spent)
-					.slice(0, 5);
-
-				setCustomers(topCustomers);
+				}
+				setCustomers(uniqueCustomers);
 			})
-			.catch(() => {
+			.catch((err) => {
+				console.error('Failed to fetch customers:', err);
 				setCustomers([]);
 			});
 
@@ -495,7 +512,7 @@ const Dashboard: React.FC = () => {
 			prev30: storePreviousYear?.commission?.order_count || 0,
 		},
 		{
-			icon: 'store-seo',
+			icon: 'search-discovery',
 			number: store?.visitors,
 			text: 'Store Views',
 			color: 'accent',
@@ -529,7 +546,6 @@ const Dashboard: React.FC = () => {
 			color: themeColors[2],
 		},
 	];
-
 	return (
 		<>
 			<NavigatorHeader
@@ -555,10 +571,11 @@ const Dashboard: React.FC = () => {
 					/>
 				}
 			/>
-			<Container>
+			<Container className='store-dashboard'>
 				<Column>
 					<Analytics
 						variant="dashboard"
+						isLoading={isLoading}
 						data={analyticsData.map((item) => ({
 							icon: item.icon,
 							iconClass: `${item.color}-bg`,
@@ -641,7 +658,7 @@ const Dashboard: React.FC = () => {
 							</ResponsiveContainer>
 						) : (
 							<ComponentStatusView
-								title={__('No sales found.', 'multivendorx')}
+								title={__('Your first sale is just around the corner!', 'multivendorx')}
 							/>
 						)}
 					</Card>
@@ -747,7 +764,7 @@ const Dashboard: React.FC = () => {
 							/>
 						) : (
 							<div className="no-data">
-								{__('No products found.', 'multivendorx')}
+								{__('Ready to receive your first order!', 'multivendorx')}
 							</div>
 						)}
 					</Card>
@@ -777,7 +794,7 @@ const Dashboard: React.FC = () => {
 							/>
 						) : (
 							<div className="no-data">
-								{__('No products found.', 'multivendorx')}
+								{__('Start selling to discover your top products!', 'multivendorx')}
 							</div>
 						)}
 					</Card>
@@ -851,42 +868,21 @@ const Dashboard: React.FC = () => {
 								window.open(url, '_blank');
 							}}
 						>
-							<div className="notification-wrapper">
-								{Array.isArray(announcement) &&
-								announcement.length > 0 ? (
-									<ul>
-										{announcement.map((item, index) => (
-											<li key={item.id}>
-												<div className="icon-wrapper">
-													<i
-														className={`adminfont-form-paypal-email admin-badge admin-color${index + 2}`}
-													/>
-												</div>
-												<div className="details">
-													<div className="notification-title">
-														{item.title}
-													</div>
-													<div className="des">
-														{item.content}
-													</div>
-													<span>
-														{formatTimeAgo(
-															item.date_created
-														)}
-													</span>
-												</div>
-											</li>
-										))}
-									</ul>
-								) : (
-									<div className="no-data">
-										{__(
-											'No announcements found.',
-											'multivendorx'
-										)}
-									</div>
-								)}
-							</div>
+							{Array.isArray(announcement) && announcement.length > 0 ? (
+								<ItemListUI
+									className="notification-wrapper"
+									items={announcement.map((item, index) => ({
+										id: item.id || index,
+										title: item.title,
+										desc: item.content,
+										icon: `form-paypal-email admin-badge admin-color${index + 2}`,
+										value: formatTimeAgo(item.date_created),
+									}))}
+								/>
+							) : (
+								<ComponentStatusView title={__('You're all caught up - check back for updates!', 'multivendorx')}
+							/>
+							)}
 						</Card>
 					</Column>
 				)}
@@ -942,34 +938,25 @@ const Dashboard: React.FC = () => {
 						<Column fullHeight grid={4}>
 							<Card title={__('Top Customers', 'multivendorx')}>
 								{customers && customers.length > 0 ? (
-									customers.map((customer, index) => (
-										<InfoItem
-											key={index}
-											title={customer.name}
-											avatar={{
-												text: customer.name
-													?.charAt(0)
-													.toUpperCase(),
-												iconClass: 'user-circle',
-											}}
-											isLoading={isLoading}
-											descriptions={[
-												{
-													value: `${customer.order_count} ${__('orders', 'multivendorx')}`,
-												},
-											]}
-											amount={formatCurrency(
-												customer.total_spent
-											)}
-										/>
-									))
+									customers.map((order, index) => {
+										const name =
+											`${order.billing?.first_name || ''} ${order.billing?.last_name || ''}`.trim() ||
+											__('Guest', 'multivendorx');
+										return (
+											<InfoItem
+												key={index}
+												title={name}
+												avatar={{
+													text: name
+														.charAt(0)
+														.toUpperCase(),
+													iconClass: 'person',
+												}}
+											/>
+										);
+									})
 								) : (
-									<div className="no-data">
-										{__(
-											'No customers found.',
-											'multivendorx'
-										)}
-									</div>
+									<ComponentStatusView title={__('No customers found.', 'multivendorx')} />
 								)}
 							</Card>
 						</Column>
@@ -987,9 +974,7 @@ const Dashboard: React.FC = () => {
 									</div>
 								))
 							) : (
-								<div className="no-data">
-									{__('No activity found.', 'multivendorx')}
-								</div>
+								<ComponentStatusView title={__('Activity will show up here as your store grows!', 'multivendorx')} />
 							)}
 						</div>
 					</Card>
@@ -1045,12 +1030,7 @@ const Dashboard: React.FC = () => {
 										</div>
 									))
 								) : (
-									<div className="no-data">
-										{__(
-											'No reviews found.',
-											'multivendorx'
-										)}
-									</div>
+									<ComponentStatusView title={__('No reviews found.', 'multivendorx')} />
 								)}
 							</div>
 						</Card>

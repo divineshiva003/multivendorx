@@ -11,7 +11,7 @@ import {
 } from 'zyra';
 import { getUrl } from '@/services/commonFunction';
 
-const PendingWithdrawal: React.FC<object> = ({onCountChange}) => {
+const PendingWithdrawal: React.FC<object> = () => {
 	const [rows, setRows] = useState<TableRow[][]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [totalRows, setTotalRows] = useState<number>(0);
@@ -72,7 +72,7 @@ const PendingWithdrawal: React.FC<object> = ({onCountChange}) => {
 								text: __('Approve', 'multivendorx'),
 								color: 'purple',
 								onClick: () =>
-                        			handleSingleAction('approve', row),
+									handleSingleAction('approve', row),
 							},
 							{
 								icon: 'close',
@@ -95,7 +95,7 @@ const PendingWithdrawal: React.FC<object> = ({onCountChange}) => {
 				headers: { 'X-WP-Nonce': appLocalizer.nonce },
 				params: {
 					page: query.paged,
-					per_page: query.per_page,
+					row: query.per_page,
 					pending_withdraw: true,
 				},
 			})
@@ -109,7 +109,7 @@ const PendingWithdrawal: React.FC<object> = ({onCountChange}) => {
 				setRows(stores);
 				const total = Number(response.headers['x-wp-total']) || 0;
 				setTotalRows(total);
-				onCountChange?.(total);
+				window.multivendorxStore?.setCount('withdrawal', total);
 				setIsLoading(false);
 			})
 			.catch((error) => {
@@ -121,24 +121,22 @@ const PendingWithdrawal: React.FC<object> = ({onCountChange}) => {
 	};
 
 	return (
-		<div className="admin-table-wrapper">
-			<TableCard
-				headers={headers}
-				rows={rows}
-				totalRows={totalRows}
-				isLoading={isLoading}
-				onQueryUpdate={doRefreshTableData}
-				ids={rowIds}
-				format={appLocalizer.date_format}
-				currency={{
-					currencySymbol: appLocalizer.currency_symbol,
-					priceDecimals: appLocalizer.price_decimals,
-					decimalSeparator: appLocalizer.decimal_separator,
-					thousandSeparator: appLocalizer.thousand_separator,
-					currencyPosition: appLocalizer.currency_position,
-				}}
-			/>
-		</div>
+		<TableCard
+			headers={headers}
+			rows={rows}
+			totalRows={totalRows}
+			isLoading={isLoading}
+			onQueryUpdate={doRefreshTableData}
+			ids={rowIds}
+			format={appLocalizer.date_format}
+			currency={{
+				currencySymbol: appLocalizer.currency_symbol,
+				priceDecimals: appLocalizer.price_decimals,
+				decimalSeparator: appLocalizer.decimal_separator,
+				thousandSeparator: appLocalizer.thousand_separator,
+				currencyPosition: appLocalizer.currency_position,
+			}}
+		/>
 	);
 };
 

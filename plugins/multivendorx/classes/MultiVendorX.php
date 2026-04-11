@@ -76,8 +76,7 @@ final class MultiVendorX {
      * @return void
      */
     public function activate() {
-        new Install();
-
+        add_option( Utill::MULTIVENDORX_OTHER_SETTINGS['run_installer'], true );
         if ( ! get_option( Utill::MULTIVENDORX_OTHER_SETTINGS['installed'] ) ) {
             add_option( Utill::MULTIVENDORX_OTHER_SETTINGS['installed'], true );
             add_option( Utill::MULTIVENDORX_OTHER_SETTINGS['plugin_activated'], true );
@@ -112,6 +111,10 @@ final class MultiVendorX {
     public function init_plugin() {
         $this->load_plugin_textdomain();
         $this->init_classes();
+        if ( get_option(Utill::MULTIVENDORX_OTHER_SETTINGS['run_installer']) ) {
+            new Install();
+            delete_option( Utill::MULTIVENDORX_OTHER_SETTINGS['run_installer'] );
+        }
 
         add_action( 'init', array( $this, 'multivendorx_register_setup_wizard' ) );
 
@@ -157,10 +160,10 @@ final class MultiVendorX {
         $this->container['pattern']         = new Pattern();
         $this->container['migration']       = new Migration\Cron();
 
+        $this->initialize_multivendorx_log();
+
         // Load all active modules.
         $this->container['modules']->load_active_modules();
-
-        $this->initialize_multivendorx_log();
 
         $this->container['active_store'] = get_user_meta( get_current_user_id(), Utill::USER_SETTINGS_KEYS['active_store'], true );
 
@@ -259,7 +262,7 @@ final class MultiVendorX {
      */
     public static function multivendorx_settings( $links ) {
         $plugin_links = array(
-            '<a href="' . admin_url( 'admin.php?page=multivendorx#&tab=settings&subtab=appearance' ) . '">' . __( 'Settings', 'multivendorx' ) . '</a>',
+            '<a href="' . admin_url( 'admin.php?page=multivendorx#&tab=settings&subtab=overview' ) . '">' . __( 'Settings', 'multivendorx' ) . '</a>',
         );
 
         if ( ! Utill::is_khali_dabba() ) {
@@ -322,7 +325,7 @@ final class MultiVendorX {
             return $this->container[ $class_name ];
         }
 
-        return new \WP_Error( sprintf( 'Call to unknown class %s.', $class ) );
+        return new \WP_Error( sprintf( 'Call to unknown class %s.', $class_name ) );
     }
 
     /**

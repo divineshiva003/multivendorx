@@ -218,7 +218,7 @@ const SequentialTaskExecutor: React.FC<SequentialTaskExecutorProps> = ({
         return taskSequence.map((task, index) => ({
             id: `task-${index}`,
             title: task.message,
-            desc: task.status,
+            // desc: task.status,
             icon: task.status,
             className: `task-status-${task.status}`,
         }));
@@ -253,7 +253,7 @@ const SequentialTaskExecutor: React.FC<SequentialTaskExecutorProps> = ({
             {processStatus && (
                 <Notice
                     type={processStatus === 'failed' ? 'error' : 'success'}
-                    displayPosition="notice"
+                    displayPosition="inline-notice"
                     message={
                         processStatus === 'failed'
                             ? failureMessage

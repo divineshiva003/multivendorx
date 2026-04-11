@@ -173,10 +173,7 @@ const StoreTable: React.FC = () => {
 					label: __('Settings', 'multivendorx'),
 					icon: 'setting',
 					onClick: (row) => {
-						window.open(
-							getUrl(row.id, 'store', 'edit'),
-							'_blank'
-						);
+						window.location.href = getUrl(row.id, 'store', 'edit'); // replace href promita di
 					},
 				},
 				{

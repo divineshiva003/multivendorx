@@ -185,6 +185,17 @@ class Rewrites {
 	 */
     public function load_store_template( $template ) {
         $store_name = get_query_var( $this->custom_store_url );
+        $store      = Store::get_store( $store_name, 'slug' );
+
+        if ( $store ) {
+            $status              = $store->get( 'status' );
+            $permissions = MultiVendorX()->util->get_permissions();
+
+            if ( in_array( $status, array( 'under_review', 'suspended' ), true ) || $permissions['hide_store_products'] ) {
+                wp_safe_redirect( wc_get_page_permalink( 'shop' ) );
+                exit();
+            }
+        }
 
         if ( ! empty( $store_name ) ) {
             $filtered_template = apply_filters( 'multivendorx_store_elementor_template', '' );
@@ -224,9 +235,9 @@ class Rewrites {
         }
 
         // Review block specific style.
-        wp_enqueue_style('wc-blocks-style');
-        wp_enqueue_style('wc-blocks-style-all-reviews');
-        
+        wp_enqueue_style( 'wc-blocks-style' );
+        wp_enqueue_style( 'wc-blocks-style-all-reviews' );
+
         FrontendScripts::load_scripts();
         FrontendScripts::enqueue_script( 'multivendorx-store-name-script' );
         FrontendScripts::enqueue_script( 'multivendorx-store-description-script' );
